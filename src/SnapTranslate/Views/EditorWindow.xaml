@@ -1,0 +1,194 @@
+<Window x:Class="SnapTranslate.Views.EditorWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="SnapTranslate 编辑器"
+        Width="1180"
+        Height="780"
+        MinWidth="760"
+        MinHeight="520"
+        WindowStartupLocation="CenterScreen"
+        Background="{StaticResource SurfaceBrush}"
+        Foreground="White">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <Border Padding="12"
+                Background="{StaticResource CardBrush}"
+                BorderBrush="#303744"
+                BorderThickness="0,0,0,1">
+            <ScrollViewer HorizontalScrollBarVisibility="Auto"
+                          VerticalScrollBarVisibility="Disabled">
+                <StackPanel Orientation="Horizontal">
+                    <Button x:Name="PointerToolButton"
+                            Click="PointerToolButton_Click"
+                            Content="选择" />
+                    <Button x:Name="RectangleToolButton"
+                            Click="RectangleToolButton_Click"
+                            Content="矩形" />
+                    <Button x:Name="PenToolButton"
+                            Click="PenToolButton_Click"
+                            Content="画笔" />
+                    <Button x:Name="TextToolButton"
+                            Click="TextToolButton_Click"
+                            Content="文字" />
+                    <Separator Margin="4,0,12,0" />
+                    <TextBlock Margin="0,0,7,0"
+                               VerticalAlignment="Center"
+                               Foreground="{StaticResource MutedBrush}"
+                               Text="颜色" />
+                    <ComboBox x:Name="ColorComboBox"
+                              Width="92"
+                              Margin="0,0,12,0"
+                              SelectionChanged="ColorComboBox_SelectionChanged">
+                        <ComboBoxItem Tag="#FF3B30" Content="红色" IsSelected="True" />
+                        <ComboBoxItem Tag="#FFD60A" Content="黄色" />
+                        <ComboBoxItem Tag="#34C759" Content="绿色" />
+                        <ComboBoxItem Tag="#0A84FF" Content="蓝色" />
+                        <ComboBoxItem Tag="#FFFFFF" Content="白色" />
+                        <ComboBoxItem Tag="#000000" Content="黑色" />
+                    </ComboBox>
+                    <TextBlock Margin="0,0,7,0"
+                               VerticalAlignment="Center"
+                               Foreground="{StaticResource MutedBrush}"
+                               Text="粗细" />
+                    <ComboBox x:Name="ThicknessComboBox"
+                              Width="72"
+                              Margin="0,0,12,0"
+                              SelectionChanged="ThicknessComboBox_SelectionChanged">
+                        <ComboBoxItem Content="2" />
+                        <ComboBoxItem Content="4" IsSelected="True" />
+                        <ComboBoxItem Content="6" />
+                        <ComboBoxItem Content="10" />
+                    </ComboBox>
+                    <Button Background="#394150"
+                            Click="UndoButton_Click"
+                            Content="撤销" />
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
+
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition x:Name="ResultsColumn" Width="0" />
+            </Grid.ColumnDefinitions>
+
+            <ScrollViewer Grid.Column="0"
+                          HorizontalScrollBarVisibility="Auto"
+                          VerticalScrollBarVisibility="Auto"
+                          Background="#0C0F14">
+                <Border Padding="24">
+                    <Grid x:Name="DocumentGrid"
+                          HorizontalAlignment="Left"
+                          VerticalAlignment="Top">
+                        <Image x:Name="CaptureImage"
+                               Stretch="Fill"
+                               SnapsToDevicePixels="True" />
+                        <Canvas x:Name="AnnotationCanvas"
+                                Background="#01000000"
+                                Cursor="Cross"
+                                MouseLeftButtonDown="AnnotationCanvas_MouseLeftButtonDown"
+                                MouseMove="AnnotationCanvas_MouseMove"
+                                MouseLeftButtonUp="AnnotationCanvas_MouseLeftButtonUp" />
+                    </Grid>
+                </Border>
+            </ScrollViewer>
+
+            <Border x:Name="ResultsPanel"
+                    Grid.Column="1"
+                    Width="360"
+                    Padding="18"
+                    Background="#1B2029"
+                    BorderBrush="#303744"
+                    BorderThickness="1,0,0,0"
+                    Visibility="Collapsed">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <TextBlock FontSize="15"
+                               FontWeight="SemiBold"
+                               Text="识别文字" />
+                    <TextBox x:Name="OriginalTextBox"
+                             Grid.Row="1"
+                             Margin="0,10,0,10"
+                             AcceptsReturn="True"
+                             IsReadOnly="True"
+                             TextWrapping="Wrap"
+                             VerticalScrollBarVisibility="Auto" />
+                    <Button Grid.Row="2"
+                            HorizontalAlignment="Left"
+                            Background="#394150"
+                            Click="CopyOriginalTextButton_Click"
+                            Content="复制原文" />
+                    <TextBlock Grid.Row="3"
+                               Margin="0,18,0,0"
+                               FontSize="15"
+                               FontWeight="SemiBold"
+                               Text="翻译结果">
+                        <TextBlock.LayoutTransform>
+                            <ScaleTransform ScaleX="1" ScaleY="1" />
+                        </TextBlock.LayoutTransform>
+                    </TextBlock>
+                    <Grid Grid.Row="3" Margin="0,46,0,0">
+                        <TextBox x:Name="TranslatedTextBox"
+                                 AcceptsReturn="True"
+                                 IsReadOnly="True"
+                                 TextWrapping="Wrap"
+                                 VerticalScrollBarVisibility="Auto" />
+                    </Grid>
+                    <Button Grid.Row="4"
+                            Margin="0,10,0,0"
+                            HorizontalAlignment="Left"
+                            Background="#394150"
+                            Click="CopyTranslatedTextButton_Click"
+                            Content="复制译文" />
+                </Grid>
+            </Border>
+        </Grid>
+
+        <Border Grid.Row="2"
+                Padding="12"
+                Background="{StaticResource CardBrush}"
+                BorderBrush="#303744"
+                BorderThickness="0,1,0,0">
+            <ScrollViewer HorizontalScrollBarVisibility="Auto"
+                          VerticalScrollBarVisibility="Disabled">
+                <StackPanel Orientation="Horizontal">
+                    <Button x:Name="OcrButton"
+                            Click="OcrButton_Click"
+                            Content="识别文字" />
+                    <Button x:Name="TranslateButton"
+                            Click="TranslateButton_Click"
+                            Content="截图翻译" />
+                    <Button Background="#394150"
+                            Click="CopyImageButton_Click"
+                            Content="复制图片" />
+                    <Button Background="#394150"
+                            Click="SaveImageButton_Click"
+                            Content="保存图片" />
+                    <Button Background="#60373B"
+                            Click="CloseButton_Click"
+                            Content="取消" />
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
+
+        <Border Grid.Row="3"
+                Padding="12,7"
+                Background="#11151C">
+            <TextBlock x:Name="StatusText"
+                       Foreground="{StaticResource MutedBrush}"
+                       Text="选择工具后即可标注；OCR 使用未标注的原始截图。" />
+        </Border>
+    </Grid>
+</Window>

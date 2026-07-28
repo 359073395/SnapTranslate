@@ -1,0 +1,31 @@
+<Application x:Class="SnapTranslate.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             StartupUri="MainWindow.xaml">
+    <Application.Resources>
+        <SolidColorBrush x:Key="AccentBrush" Color="#4F7CFF" />
+        <SolidColorBrush x:Key="SurfaceBrush" Color="#171A21" />
+        <SolidColorBrush x:Key="CardBrush" Color="#212630" />
+        <SolidColorBrush x:Key="MutedBrush" Color="#98A2B3" />
+        <Style TargetType="Button">
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="Background" Value="{StaticResource AccentBrush}" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="16,9" />
+            <Setter Property="Margin" Value="0,0,8,0" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+        <Style TargetType="TextBox">
+            <Setter Property="Padding" Value="10,7" />
+            <Setter Property="Background" Value="#11151C" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="BorderBrush" Value="#384150" />
+            <Setter Property="CaretBrush" Value="White" />
+        </Style>
+        <Style TargetType="ComboBox">
+            <Setter Property="Padding" Value="8,6" />
+            <Setter Property="Background" Value="#11151C" />
+            <Setter Property="Foreground" Value="White" />
+        </Style>
+    </Application.Resources>
+</Application>

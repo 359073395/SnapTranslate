@@ -1,0 +1,52 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Restore
+        run: dotnet restore SnapTranslate.slnx
+
+      - name: Build
+        run: dotnet build SnapTranslate.slnx -c Release --no-restore
+
+      - name: Publish self-contained app
+        run: >
+          dotnet publish src/SnapTranslate/SnapTranslate.csproj
+          -c Release
+          -r win-x64
+          --self-contained true
+          --no-restore
+          -o artifacts/publish
+
+      - name: Package
+        shell: pwsh
+        run: |
+          Copy-Item README.md,LICENSE,THIRD_PARTY_NOTICES.md -Destination artifacts/publish
+          Compress-Archive -Path artifacts/publish/* -DestinationPath artifacts/SnapTranslate-win-x64.zip
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: SnapTranslate-win-x64
+          path: artifacts/SnapTranslate-win-x64.zip
+          if-no-files-found: error

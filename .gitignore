@@ -1,0 +1,23 @@
+# Build output
+**/bin/
+**/obj/
+artifacts/
+publish/
+
+# Visual Studio / Rider
+.vs/
+.idea/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Windows
+Thumbs.db
+Desktop.ini
+
+# Local secrets and settings
+.env
+.env.*
+!.env.example
+settings.json
