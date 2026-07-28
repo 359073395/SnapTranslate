@@ -89,6 +89,9 @@
                         <Image x:Name="CaptureImage"
                                Stretch="Fill"
                                SnapsToDevicePixels="True" />
+                        <Canvas x:Name="TranslationCanvas"
+                                Background="Transparent"
+                                IsHitTestVisible="False" />
                         <Canvas x:Name="AnnotationCanvas"
                                 Background="#01000000"
                                 Cursor="Cross"
@@ -134,7 +137,7 @@
                                Margin="0,18,0,0"
                                FontSize="15"
                                FontWeight="SemiBold"
-                               Text="翻译结果">
+                               Text="翻译结果（已显示在图片中）">
                         <TextBlock.LayoutTransform>
                             <ScaleTransform ScaleX="1" ScaleY="1" />
                         </TextBlock.LayoutTransform>
@@ -169,7 +172,12 @@
                             Content="识别文字" />
                     <Button x:Name="TranslateButton"
                             Click="TranslateButton_Click"
-                            Content="截图翻译" />
+                            Content="翻译到图片" />
+                    <Button x:Name="ClearTranslationButton"
+                            IsEnabled="False"
+                            Background="#394150"
+                            Click="ClearTranslationButton_Click"
+                            Content="清除译文" />
                     <Button Background="#394150"
                             Click="CopyImageButton_Click"
                             Content="复制图片" />
