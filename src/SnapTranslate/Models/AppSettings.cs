@@ -7,6 +7,11 @@ public sealed class AppSettings
     public string TranslationProvider { get; set; } = "GoogleWeb";
     public string OpenAiEndpoint { get; set; } = "https://api.openai.com/v1/chat/completions";
     public string OpenAiModel { get; set; } = "gpt-4.1-mini";
+    public string HotkeyKey { get; set; } = "A";
+    public bool HotkeyControl { get; set; } = true;
+    public bool HotkeyShift { get; set; } = true;
+    public bool HotkeyAlt { get; set; }
+    public bool HotkeyWindows { get; set; }
 
     public static IReadOnlyList<LanguageOption> TargetLanguages { get; } =
     [
