@@ -41,7 +41,7 @@ jobs:
       - name: Package
         shell: pwsh
         run: |
-          Copy-Item README.md,LICENSE,THIRD_PARTY_NOTICES.md -Destination artifacts/publish
+          Copy-Item README.md,CHANGELOG.md,LICENSE,THIRD_PARTY_NOTICES.md -Destination artifacts/publish
           Compress-Archive -Path artifacts/publish/* -DestinationPath artifacts/SnapTranslate-win-x64.zip
 
       - name: Upload artifact
