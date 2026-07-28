@@ -16,7 +16,7 @@ jobs:
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Set up .NET
         uses: actions/setup-dotnet@v5
@@ -45,7 +45,7 @@ jobs:
           Compress-Archive -Path artifacts/publish/* -DestinationPath artifacts/SnapTranslate-win-x64.zip
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: SnapTranslate-win-x64
           path: artifacts/SnapTranslate-win-x64.zip
