@@ -45,6 +45,7 @@ public partial class EditorWindow : Window
     private double _drawingThickness = 4;
     private Point _start;
     private Shape? _activeShape;
+    private OcrRecognitionResult? _recognition;
     private bool _drawing;
     private bool _busy;
 
@@ -62,6 +63,8 @@ public partial class EditorWindow : Window
         DocumentGrid.Height = bitmap.Height;
         CaptureImage.Width = bitmap.Width;
         CaptureImage.Height = bitmap.Height;
+        TranslationCanvas.Width = bitmap.Width;
+        TranslationCanvas.Height = bitmap.Height;
         AnnotationCanvas.Width = bitmap.Width;
         AnnotationCanvas.Height = bitmap.Height;
 
@@ -281,19 +284,27 @@ public partial class EditorWindow : Window
 
         try
         {
-            string sourceText = await RecognizeAsync(force: false);
-            if (string.IsNullOrWhiteSpace(sourceText))
+            OcrRecognitionResult recognition = await RecognizeAsync(force: false);
+            if (recognition.Lines.Count == 0)
             {
                 throw new InvalidOperationException("截图中没有识别到文字。");
             }
 
-            SetBusy(true, "正在翻译…");
-            string translated = await _translationService.TranslateAsync(
-                sourceText,
-                _workCancellation.Token);
-            TranslatedTextBox.Text = translated;
+            string targetLanguage = GetTargetLanguageName();
+            SetBusy(true, $"正在翻译为{targetLanguage}并排版到图片…");
+            IReadOnlyList<string> translatedLines =
+                await _translationService.TranslateLinesAsync(
+                    recognition.Lines.Select(line => line.Text).ToArray(),
+                    _workCancellation.Token);
+            TranslatedTextBox.Text = string.Join(
+                Environment.NewLine,
+                translatedLines);
+            ApplyTranslationOverlays(
+                recognition.Lines,
+                translatedLines);
             ShowResults();
-            StatusText.Text = "翻译完成。";
+            StatusText.Text =
+                $"已翻译为{targetLanguage}，译文已覆盖在图片对应位置。";
         }
         catch (Exception ex)
         {
@@ -305,40 +316,157 @@ public partial class EditorWindow : Window
         }
     }
 
-    private async Task<string> RecognizeAsync(bool force)
+    private async Task<OcrRecognitionResult> RecognizeAsync(bool force)
     {
         if (_busy)
         {
-            return OriginalTextBox.Text;
+            return _recognition ?? OcrRecognitionResult.Empty;
         }
 
-        if (!force && !string.IsNullOrWhiteSpace(OriginalTextBox.Text))
+        if (!force && _recognition is not null)
         {
-            return OriginalTextBox.Text;
+            return _recognition;
         }
 
-        SetBusy(true, "正在识别文字…");
+        SetBusy(true, "正在识别文字和位置…");
         try
         {
-            string text = await OcrService.RecognizeAsync(
-                _sourceBitmap,
-                _settings.OcrLanguage,
-                _workCancellation.Token);
-            OriginalTextBox.Text = text;
+            OcrRecognitionResult recognition =
+                await OcrService.RecognizeDetailedAsync(
+                    _sourceBitmap,
+                    _settings.OcrLanguage,
+                    _workCancellation.Token);
+            _recognition = recognition;
+            OriginalTextBox.Text = recognition.Text;
             if (force)
             {
                 TranslatedTextBox.Clear();
+                ClearTranslationOverlays();
             }
 
             ShowResults();
-            StatusText.Text = text.Length > 0 ? "文字识别完成。" : "没有识别到文字。";
-            return text;
+            StatusText.Text = recognition.Lines.Count > 0
+                ? $"文字识别完成，共 {recognition.Lines.Count} 行。"
+                : "没有识别到文字。";
+            return recognition;
         }
         finally
         {
             SetBusy(false);
         }
     }
+
+    private void ApplyTranslationOverlays(
+        IReadOnlyList<OcrTextLine> sourceLines,
+        IReadOnlyList<string> translatedLines)
+    {
+        ClearTranslationOverlays();
+
+        int count = Math.Min(sourceLines.Count, translatedLines.Count);
+        for (int index = 0; index < count; index++)
+        {
+            string translation = translatedLines[index].Trim();
+            if (translation.Length == 0)
+            {
+                continue;
+            }
+
+            OcrTextLine sourceLine = sourceLines[index];
+            Border overlay = CreateTranslationOverlay(sourceLine, translation);
+            TranslationCanvas.Children.Add(overlay);
+        }
+
+        ClearTranslationButton.IsEnabled = TranslationCanvas.Children.Count > 0;
+    }
+
+    private Border CreateTranslationOverlay(OcrTextLine sourceLine, string translation)
+    {
+        double canvasWidth = Math.Max(1, TranslationCanvas.Width);
+        double canvasHeight = Math.Max(1, TranslationCanvas.Height);
+        double fontSize = Math.Clamp(sourceLine.Height * 0.78, 12, 38);
+        double estimatedTextWidth = translation.Sum(
+            character => character > 255 ? fontSize : fontSize * 0.58);
+        double minimumWidth = Math.Min(
+            canvasWidth,
+            Math.Max(72, sourceLine.Width + 10));
+        double maximumWidth = Math.Max(
+            minimumWidth,
+            Math.Min(
+                canvasWidth,
+                Math.Max(260, sourceLine.Width * 2.8)));
+        double width = Math.Clamp(
+            Math.Max(sourceLine.Width + 10, estimatedTextWidth + 18),
+            minimumWidth,
+            maximumWidth);
+        double height = Math.Min(
+            canvasHeight,
+            Math.Max(28, sourceLine.Height + 10));
+        double left = Math.Clamp(
+            sourceLine.X - Math.Max(0, width - sourceLine.Width) / 2,
+            0,
+            Math.Max(0, canvasWidth - width));
+        double top = Math.Clamp(
+            sourceLine.Y - 5,
+            0,
+            Math.Max(0, canvasHeight - height));
+
+        TextBlock text = new()
+        {
+            Text = translation,
+            Foreground = Brushes.White,
+            FontFamily = new System.Windows.Media.FontFamily("Segoe UI"),
+            FontSize = fontSize,
+            FontWeight = FontWeights.SemiBold,
+            TextAlignment = TextAlignment.Center,
+            TextTrimming = TextTrimming.CharacterEllipsis
+        };
+        Viewbox textFitter = new()
+        {
+            Stretch = Stretch.Uniform,
+            StretchDirection = StretchDirection.DownOnly,
+            HorizontalAlignment = System.Windows.HorizontalAlignment.Stretch,
+            VerticalAlignment = System.Windows.VerticalAlignment.Center,
+            Child = text
+        };
+        Border overlay = new()
+        {
+            Width = width,
+            Height = height,
+            Padding = new Thickness(5, 2, 5, 2),
+            Background = new SolidColorBrush(MediaColor.FromArgb(224, 15, 18, 24)),
+            BorderBrush = new SolidColorBrush(MediaColor.FromArgb(150, 255, 255, 255)),
+            BorderThickness = new Thickness(1),
+            CornerRadius = new CornerRadius(4),
+            Child = textFitter
+        };
+
+        Canvas.SetLeft(overlay, left);
+        Canvas.SetTop(overlay, top);
+        return overlay;
+    }
+
+    private void ClearTranslationButton_Click(object sender, RoutedEventArgs e)
+    {
+        ClearTranslationOverlays();
+        TranslatedTextBox.Clear();
+        StatusText.Text = "已从图片中清除译文。";
+    }
+
+    private void ClearTranslationOverlays()
+    {
+        TranslationCanvas.Children.Clear();
+        ClearTranslationButton.IsEnabled = false;
+    }
+
+    private string GetTargetLanguageName() =>
+        AppSettings.TargetLanguages
+            .FirstOrDefault(
+                language => string.Equals(
+                    language.Code,
+                    _settings.TargetLanguage,
+                    StringComparison.OrdinalIgnoreCase))
+            ?.Name
+        ?? _settings.TargetLanguage;
 
     private void ShowResults()
     {
@@ -351,6 +479,8 @@ public partial class EditorWindow : Window
         _busy = busy;
         OcrButton.IsEnabled = !busy;
         TranslateButton.IsEnabled = !busy;
+        ClearTranslationButton.IsEnabled =
+            !busy && TranslationCanvas.Children.Count > 0;
         if (!string.IsNullOrWhiteSpace(status))
         {
             StatusText.Text = status;

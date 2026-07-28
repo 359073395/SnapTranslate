@@ -2,7 +2,7 @@
 
 一个面向 Windows 的轻量截图翻译工具：像微信截图一样框选屏幕区域，然后标注、识别文字、翻译、复制或保存。
 
-> 当前版本：`v0.1.1`（可用预览版）
+> 当前版本：`v0.2.0`（可用预览版）
 
 ## 功能
 
@@ -11,6 +11,8 @@
 - 矩形、自由画笔、文字标注，可调整颜色和粗细
 - 撤销上一条标注
 - 使用 Windows 本地 OCR 识别文字
+- 根据 OCR 文字坐标，把译文直接覆盖在图片对应位置
+- 支持印尼语 / Bahasa Indonesia，适合 TikTok 图片文案
 - 一键复制原文或译文
 - 一键复制带标注图片，或保存为 PNG
 - Google Web 翻译（实验性、无需密钥）
@@ -18,7 +20,7 @@
 
 ## 下载和使用
 
-从 GitHub 的 [Releases](../../releases) 下载 `SnapTranslate-v0.1.1-win-x64.zip`，解压后运行 `SnapTranslate.exe`。发布包自带 .NET 运行时，不需要单独安装。
+从 GitHub 的 [Releases](../../releases) 下载 `SnapTranslate-v0.2.0-win-x64.zip`，解压后运行 `SnapTranslate.exe`。发布包自带 .NET 运行时，不需要单独安装。
 
 系统要求：
 
@@ -27,6 +29,8 @@
 - 使用中文、日语等 OCR 前，需要在 Windows 设置中安装相应语言包
 
 首次启动后，按 `Ctrl + Shift + A`，拖动鼠标选择区域。松开鼠标后会进入编辑器。若默认快捷键被占用，点击主界面的快捷键输入框，直接按下新的组合键，再点击“保存设置”。
+
+需要制作印尼 TikTok 图片时，在主界面把“目标语言”设为“印尼语 / Bahasa Indonesia”并保存。截图后点击“翻译到图片”，译文会自动覆盖到识别出的原文字块位置；可继续标注、复制图片或保存 PNG。“清除译文”可以恢复原图。
 
 ## OCR 语言包
 
@@ -61,7 +65,7 @@ API Key 不写入设置文件。配置默认保存到：
 ## 隐私说明
 
 - 截图和 OCR 默认仅在本机处理。
-- 只有点击“翻译”时，识别出的文字才会发送给所选翻译服务。
+- 只有点击“翻译到图片”时，识别出的文字才会发送给所选翻译服务。
 - OpenAI 兼容接口的密钥只从 `SNAPTRANSLATE_API_KEY` 环境变量读取。
 
 ## 从源码构建
@@ -79,6 +83,7 @@ dotnet publish src\SnapTranslate\SnapTranslate.csproj `
 ## 当前限制
 
 - 首版只截取鼠标所在显示器，暂不支持跨屏框选。
+- 图片译文使用深色半透明文字卡覆盖原文，不包含生成式图片修复或背景重绘。
 - 尚未提供自动更新、窗口吸附、箭头/马赛克和托盘常驻。
 - Google Web 翻译是实验性功能，稳定性不作保证。
 
@@ -98,4 +103,4 @@ SnapTranslate 不是 ShareX 官方产品。项目的 Windows OCR 处理流程参
 
 SnapTranslate is a lightweight Windows screenshot translator. Press `Ctrl + Shift + A`, select a region, annotate it, run local Windows OCR, translate text, and copy or save the result.
 
-The `v0.1.1` preview supports customizable global hotkeys, rectangle/freehand/text annotations, local OCR, Google Web translation, OpenAI-compatible translation, clipboard output, and PNG export. Windows 10 build 19041 or later is required. See the Chinese documentation above for setup details.
+The `v0.2.0` preview supports customizable global hotkeys, rectangle/freehand/text annotations, local OCR, position-aware translation overlays, Indonesian/Bahasa Indonesia, clipboard output, and PNG export. Windows 10 build 19041 or later is required. See the Chinese documentation above for setup details.

@@ -44,6 +44,12 @@ public static class OcrService
     public static async Task<string> RecognizeAsync(
         Bitmap bitmap,
         string languageTag,
+        CancellationToken cancellationToken = default) =>
+        (await RecognizeDetailedAsync(bitmap, languageTag, cancellationToken)).Text;
+
+    public static async Task<OcrRecognitionResult> RecognizeDetailedAsync(
+        Bitmap bitmap,
+        string languageTag,
         CancellationToken cancellationToken = default)
     {
         using Bitmap copy = new(bitmap);
@@ -79,24 +85,48 @@ public static class OcrService
             using SoftwareBitmap softwareBitmap = await decoder.GetSoftwareBitmapAsync();
             OcrResult result = await engine.RecognizeAsync(softwareBitmap);
 
-            IEnumerable<string> lines;
-            if (language.LanguageTag.StartsWith("zh", StringComparison.OrdinalIgnoreCase) ||
-                language.LanguageTag.StartsWith("ja", StringComparison.OrdinalIgnoreCase))
+            List<OcrTextLine> recognizedLines = [];
+            foreach (OcrLine line in result.Lines)
             {
-                lines = result.Lines.Select(line => string.Concat(line.Words.Select(word => word.Text)));
-            }
-            else if (language.LayoutDirection == LanguageLayoutDirection.Rtl)
-            {
-                lines = result.Lines.Select(
-                    line => string.Join(" ", line.Words.Reverse().Select(word => word.Text)));
-            }
-            else
-            {
-                lines = result.Lines.Select(line => line.Text);
+                OcrWord[] words = line.Words.ToArray();
+                if (words.Length == 0)
+                {
+                    continue;
+                }
+
+                string text;
+                if (language.LanguageTag.StartsWith("zh", StringComparison.OrdinalIgnoreCase) ||
+                    language.LanguageTag.StartsWith("ja", StringComparison.OrdinalIgnoreCase))
+                {
+                    text = string.Concat(words.Select(word => word.Text));
+                }
+                else if (language.LayoutDirection == LanguageLayoutDirection.Rtl)
+                {
+                    text = string.Join(" ", words.Reverse().Select(word => word.Text));
+                }
+                else
+                {
+                    text = line.Text;
+                }
+
+                double left = words.Min(word => word.BoundingRect.X);
+                double top = words.Min(word => word.BoundingRect.Y);
+                double right = words.Max(word => word.BoundingRect.X + word.BoundingRect.Width);
+                double bottom = words.Max(word => word.BoundingRect.Y + word.BoundingRect.Height);
+                if (!string.IsNullOrWhiteSpace(text) && right > left && bottom > top)
+                {
+                    recognizedLines.Add(
+                        new OcrTextLine(
+                            text.Trim(),
+                            left,
+                            top,
+                            right - left,
+                            bottom - top));
+                }
             }
 
             cancellationToken.ThrowIfCancellationRequested();
-            return string.Join(Environment.NewLine, lines).Trim();
+            return new OcrRecognitionResult(recognizedLines);
         }, cancellationToken);
     }
 }

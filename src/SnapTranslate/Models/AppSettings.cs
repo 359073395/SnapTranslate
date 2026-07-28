@@ -17,10 +17,10 @@ public sealed class AppSettings
     [
         new("简体中文", "zh-CN"),
         new("繁体中文", "zh-TW"),
+        new("印尼语 / Bahasa Indonesia", "id"),
         new("English", "en"),
         new("日本語", "ja"),
         new("한국어", "ko"),
-        new("Bahasa Indonesia", "id"),
         new("Français", "fr"),
         new("Deutsch", "de"),
         new("Español", "es")

@@ -32,6 +32,50 @@ public sealed class TranslationService
             : TranslateWithGoogleWebAsync(text, cancellationToken);
     }
 
+    public async Task<IReadOnlyList<string>> TranslateLinesAsync(
+        IReadOnlyList<string> lines,
+        CancellationToken cancellationToken = default)
+    {
+        if (lines.Count == 0)
+        {
+            return [];
+        }
+
+        string combined = string.Join('\n', lines);
+        string combinedTranslation = await TranslateAsync(combined, cancellationToken);
+        string[] translatedLines = combinedTranslation
+            .Replace("\r", string.Empty, StringComparison.Ordinal)
+            .Split('\n')
+            .Select(line => line.Trim())
+            .ToArray();
+
+        if (translatedLines.Length == lines.Count &&
+            translatedLines.All(line => line.Length > 0))
+        {
+            return translatedLines;
+        }
+
+        string[] fallbackTranslations = new string[lines.Count];
+        using SemaphoreSlim concurrency = new(3);
+        IEnumerable<Task> translationTasks = lines.Select(
+            async (line, index) =>
+            {
+                await concurrency.WaitAsync(cancellationToken);
+                try
+                {
+                    fallbackTranslations[index] =
+                        await TranslateAsync(line, cancellationToken);
+                }
+                finally
+                {
+                    concurrency.Release();
+                }
+            });
+
+        await Task.WhenAll(translationTasks);
+        return fallbackTranslations;
+    }
+
     private async Task<string> TranslateWithGoogleWebAsync(
         string text,
         CancellationToken cancellationToken)
@@ -97,8 +141,7 @@ public sealed class TranslationService
                 new
                 {
                     role = "system",
-                    content =
-                        $"Translate the user text into {_settings.TargetLanguage}. Return only the translation and preserve line breaks."
+                    content = GetOpenAiTranslationInstruction()
                 },
                 new
                 {
@@ -131,5 +174,22 @@ public sealed class TranslationService
         }
 
         throw new InvalidOperationException("OpenAI 兼容接口返回格式无法识别。");
+    }
+
+    private string GetOpenAiTranslationInstruction()
+    {
+        if (string.Equals(_settings.TargetLanguage, "id", StringComparison.OrdinalIgnoreCase))
+        {
+            return """
+                   Translate the user text into natural Indonesian (Bahasa Indonesia) suitable for TikTok.
+                   Keep it concise, contemporary, and easy to read in an image overlay.
+                   Preserve line breaks, emojis, @handles, hashtags, names, numbers, and product terms.
+                   Return only the translation with no explanation.
+                   """;
+        }
+
+        return
+            $"Translate the user text into {_settings.TargetLanguage}. " +
+            "Keep it concise for an image overlay, preserve line breaks, and return only the translation.";
     }
 }
