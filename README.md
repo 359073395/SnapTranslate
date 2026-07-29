@@ -2,7 +2,7 @@
 
 一个面向 Windows 的轻量截图翻译工具：像微信截图一样框选屏幕区域，然后标注、识别文字、翻译、复制或保存。
 
-> 当前版本：`v0.2.0`（可用预览版）
+> 当前版本：`v0.2.1`（可用预览版）
 
 ## 功能
 
@@ -16,11 +16,11 @@
 - 一键复制原文或译文
 - 一键复制带标注图片，或保存为 PNG
 - Google Web 翻译（实验性、无需密钥）
-- OpenAI 兼容翻译接口（通过环境变量读取 API Key）
+- OpenAI 兼容翻译接口（支持基础 URL、加密保存 API Key 和连接测试）
 
 ## 下载和使用
 
-从 GitHub 的 [Releases](../../releases) 下载 `SnapTranslate-v0.2.0-win-x64.zip`，解压后运行 `SnapTranslate.exe`。发布包自带 .NET 运行时，不需要单独安装。
+从 GitHub 的 [Releases](../../releases) 下载 `SnapTranslate-v0.2.1-win-x64.zip`，解压后运行 `SnapTranslate.exe`。发布包自带 .NET 运行时，不需要单独安装。
 
 系统要求：
 
@@ -49,14 +49,15 @@
 
 ### OpenAI 兼容接口
 
-在主界面填写兼容的 Chat Completions 地址和模型，并在启动程序前设置环境变量：
+在主界面选择“OpenAI 兼容接口”，然后填写：
 
-```powershell
-$env:SNAPTRANSLATE_API_KEY = "你的 API Key"
-.\SnapTranslate.exe
-```
+- 接口地址：可以填写 `https://example.com/v1` 基础地址，也可以填写完整的 `/v1/chat/completions` 地址。
+- API Key：输入框会遮罩显示，保存时使用 Windows DPAPI 按当前用户加密。
+- 模型：填写中转站支持的模型名称。
 
-API Key 不写入设置文件。配置默认保存到：
+点击“测试连接”可以在截图前验证地址、Key 和模型是否可用。为兼容旧的自动化配置，程序仍会在界面未填写 Key 时尝试读取 `SNAPTRANSLATE_API_KEY` 环境变量。
+
+配置默认保存到：
 
 ```text
 %APPDATA%\SnapTranslate\settings.json
@@ -66,7 +67,7 @@ API Key 不写入设置文件。配置默认保存到：
 
 - 截图和 OCR 默认仅在本机处理。
 - 只有点击“翻译到图片”时，识别出的文字才会发送给所选翻译服务。
-- OpenAI 兼容接口的密钥只从 `SNAPTRANSLATE_API_KEY` 环境变量读取。
+- OpenAI 兼容接口的 API Key 不以明文写入设置文件，而是使用 Windows 当前用户的数据保护机制加密；只有同一个 Windows 用户可以解密。
 
 ## 从源码构建
 
@@ -103,4 +104,4 @@ SnapTranslate 不是 ShareX 官方产品。项目的 Windows OCR 处理流程参
 
 SnapTranslate is a lightweight Windows screenshot translator. Press `Ctrl + Shift + A`, select a region, annotate it, run local Windows OCR, translate text, and copy or save the result.
 
-The `v0.2.0` preview supports customizable global hotkeys, rectangle/freehand/text annotations, local OCR, position-aware translation overlays, Indonesian/Bahasa Indonesia, clipboard output, and PNG export. Windows 10 build 19041 or later is required. See the Chinese documentation above for setup details.
+The `v0.2.1` preview supports customizable global hotkeys, rectangle/freehand/text annotations, local OCR, position-aware translation overlays, Indonesian/Bahasa Indonesia, clipboard output, PNG export, and OpenAI-compatible relay settings with Windows-encrypted API key storage. Windows 10 build 19041 or later is required. See the Chinese documentation above for setup details.

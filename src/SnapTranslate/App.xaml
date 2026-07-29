@@ -26,6 +26,15 @@
             <Setter Property="CaretBrush" Value="White" />
             <Setter Property="SelectionBrush" Value="{StaticResource AccentBrush}" />
         </Style>
+        <Style TargetType="PasswordBox">
+            <Setter Property="Padding" Value="10,7" />
+            <Setter Property="Background" Value="{StaticResource InputBrush}" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="BorderBrush" Value="{StaticResource InputBorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CaretBrush" Value="White" />
+            <Setter Property="SelectionBrush" Value="{StaticResource AccentBrush}" />
+        </Style>
         <Style TargetType="ComboBoxItem">
             <Setter Property="Padding" Value="11,8" />
             <Setter Property="Foreground" Value="White" />

@@ -62,6 +62,7 @@ public partial class MainWindow : Window
             string.Equals(_settings.TranslationProvider, "OpenAI", StringComparison.OrdinalIgnoreCase) ? 1 : 0;
         OpenAiEndpointTextBox.Text = _settings.OpenAiEndpoint;
         OpenAiModelTextBox.Text = _settings.OpenAiModel;
+        OpenAiApiKeyPasswordBox.Password = _settings.OpenAiApiKey;
         LoadHotkeyFromSettings();
         UpdateProviderPanel();
     }
@@ -74,6 +75,7 @@ public partial class MainWindow : Window
             (TranslationProviderComboBox.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? "GoogleWeb";
         _settings.OpenAiEndpoint = OpenAiEndpointTextBox.Text.Trim();
         _settings.OpenAiModel = OpenAiModelTextBox.Text.Trim();
+        _settings.OpenAiApiKey = OpenAiApiKeyPasswordBox.Password.Trim();
         _settings.HotkeyKey = _pendingHotkeyKey.ToString();
         _settings.HotkeyControl = _pendingHotkeyModifiers.HasFlag(ModifierKeys.Control);
         _settings.HotkeyShift = _pendingHotkeyModifiers.HasFlag(ModifierKeys.Shift);
@@ -142,6 +144,32 @@ public partial class MainWindow : Window
                 _pendingHotkeyKey,
                 _pendingHotkeyModifiers),
             saved: true);
+    }
+
+    private async void TestOpenAiButton_Click(object sender, RoutedEventArgs e)
+    {
+        ReadSettingsFromControls();
+        TestOpenAiButton.IsEnabled = false;
+        OpenAiConnectionStatusText.Text = "正在测试…";
+        OpenAiConnectionStatusText.Foreground = Brushes.LightSkyBlue;
+
+        try
+        {
+            TranslationService translationService = new(_settings);
+            string result = await translationService.TestOpenAiConnectionAsync();
+            string preview = result.Length <= 80 ? result : $"{result[..80]}…";
+            OpenAiConnectionStatusText.Text = $"连接成功：{preview}";
+            OpenAiConnectionStatusText.Foreground = Brushes.LightGreen;
+        }
+        catch (Exception ex)
+        {
+            OpenAiConnectionStatusText.Text = ex.Message;
+            OpenAiConnectionStatusText.Foreground = Brushes.Orange;
+        }
+        finally
+        {
+            TestOpenAiButton.IsEnabled = true;
+        }
     }
 
     private void LoadHotkeyFromSettings()

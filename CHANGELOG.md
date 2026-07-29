@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.2.1
+
+- OpenAI 兼容接口新增遮罩 API Key 输入框，并使用 Windows 当前用户的数据保护机制加密保存。
+- 接口地址支持直接填写 `/v1` 基础 URL，程序会自动补全 `/chat/completions`。
+- 新增“测试连接”按钮，可在截图前验证 URL、Key 和模型配置。
+- HTTP 请求失败时显示中转站返回的状态码和错误信息，便于排查。
+- GPT-5 系列翻译请求使用低延迟的无推理模式，不再发送旧模型的 `temperature` 参数。
+- 保留 `SNAPTRANSLATE_API_KEY` 环境变量作为兼容回退。
+
 ## 0.2.0
 
 - Windows OCR 结果现在保留每行文字在截图中的坐标。
