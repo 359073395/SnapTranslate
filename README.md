@@ -2,15 +2,16 @@
 
 一个面向 Windows 的轻量截图翻译工具：像微信截图一样框选屏幕区域，然后标注、识别文字、翻译、复制或保存。
 
-> 当前版本：`v0.2.3`（可用预览版）
+> 当前版本：`v0.2.4`（可用预览版）
 
 ## 功能
 
 - 可自定义全局截图快捷键，默认 `Ctrl + Shift + A`
 - 主窗口右上角关闭按钮会最小化，截图快捷键继续在后台可用；需要完全结束时点击“退出程序”
 - 默认使用贴近选区的日常截图工具栏，不再强制进入完整编辑器
-- 回车或双击选区会复制当前最终画面并结束截图
-- OCR 弹层把“复制原文”和“复制译文”放在各自内容旁，“复制图片”和“保存 PNG”并列
+- 完成按钮、回车或双击选区会复制当前最终画面并结束截图，`Esc` 直接取消
+- 浮动工具栏按微信截图的使用顺序分组：标注 → OCR/翻译 → 撤销/保存/高级编辑 → 取消/完成
+- OCR 弹层把“复制原文”和“复制译文”放在各自内容旁；图片无需单独复制按钮
 - 需要更大画布、完整文字面板或继续精细调整时，可点击“高级编辑”
 - 鼠标拖动框选当前屏幕区域
 - 矩形、自由画笔、文字标注，可调整颜色和粗细
@@ -25,7 +26,7 @@
 
 ## 下载和使用
 
-从 GitHub 的 [Releases](../../releases) 下载 `SnapTranslate-v0.2.3-win-x64.zip`，解压后运行 `SnapTranslate.exe`。发布包自带 .NET 运行时，不需要单独安装。
+从 GitHub 的 [Releases](../../releases) 下载 `SnapTranslate-v0.2.4-win-x64.zip`，解压后运行 `SnapTranslate.exe`。发布包自带 .NET 运行时，不需要单独安装。
 
 系统要求：
 
@@ -33,9 +34,9 @@
 - 64 位 Windows
 - 使用中文、日语等 OCR 前，需要在 Windows 设置中安装相应语言包
 
-首次启动后，OCR 语言保持“自动识别（推荐）”，按 `Ctrl + Shift + A`，拖动鼠标选择区域。松开鼠标后会显示贴近选区的日常截图工具栏；回车或双击选区可直接复制当前画面并结束，点击“高级编辑”可进入原来的完整编辑器。若默认快捷键被占用，点击主界面的快捷键输入框，直接按下新的组合键，再点击“保存设置”。
+首次启动后，OCR 语言保持“自动识别（推荐）”，按 `Ctrl + Shift + A`，拖动鼠标选择区域。松开鼠标后会显示贴近选区的日常截图工具栏；点击绿色完成按钮、按回车或双击选区都会自动复制当前最终画面并结束，按 `Esc` 取消，点击“高级编辑”可进入原来的完整编辑器。若默认快捷键被占用，点击主界面的快捷键输入框，直接按下新的组合键，再点击“保存设置”。
 
-需要制作印尼 TikTok 图片时，在主界面把“目标语言”设为“印尼语 / Bahasa Indonesia”并保存。截图后点击“翻译到图片”，译文会自动覆盖到识别出的原文字块位置；可继续标注、复制图片或保存 PNG。“清除译文”可以恢复原图。
+需要制作印尼 TikTok 图片时，在主界面把“目标语言”设为“印尼语 / Bahasa Indonesia”并保存。截图后点击“翻译到图片”，译文会自动覆盖到识别出的原文字块位置；可继续标注，完成时自动复制最终图片，也可以另存为 PNG。“清除译文”可以恢复原图。
 
 ## OCR 语言包
 
@@ -112,4 +113,4 @@ SnapTranslate 不是 ShareX 官方产品。项目的 Windows OCR 处理流程参
 
 SnapTranslate is a lightweight Windows screenshot translator. Press `Ctrl + Shift + A`, select a region, annotate it, run local Windows OCR, translate text, and copy or save the result.
 
-The `v0.2.3` preview adds a compact selection-adjacent quick toolbar, Enter/double-click copy-and-finish, and an Advanced Editor handoff while keeping the screenshot hotkey active when the main window is minimized. It also supports automatic selection among installed Windows OCR engines, customizable global hotkeys, rectangle/freehand/text annotations, position-aware translation overlays, Indonesian/Bahasa Indonesia, clipboard output, PNG export, and OpenAI-compatible relay settings with Windows-encrypted API key storage. Windows 10 build 19041 or later is required. See the Chinese documentation above for setup details.
+The `v0.2.4` preview reorganizes the compact toolbar in a WeChat-style workflow, removes the redundant image-copy action, makes the green completion action/Enter/double-click copy the final image automatically, and keeps Escape as cancel. It also supports automatic selection among installed Windows OCR engines, customizable global hotkeys, rectangle/freehand/text annotations, position-aware translation overlays, Indonesian/Bahasa Indonesia, clipboard output, PNG export, an Advanced Editor handoff, and OpenAI-compatible relay settings with Windows-encrypted API key storage. Windows 10 build 19041 or later is required. See the Chinese documentation above for setup details.

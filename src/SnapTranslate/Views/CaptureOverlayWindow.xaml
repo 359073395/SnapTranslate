@@ -17,8 +17,8 @@
         PreviewMouseRightButtonDown="Window_MouseRightButtonDown">
     <Window.Resources>
         <Style x:Key="QuickToolButtonStyle" TargetType="Button">
-            <Setter Property="Width" Value="64" />
-            <Setter Property="Height" Value="66" />
+            <Setter Property="Width" Value="52" />
+            <Setter Property="Height" Value="48" />
             <Setter Property="Margin" Value="1" />
             <Setter Property="Padding" Value="0" />
             <Setter Property="Background" Value="Transparent" />
@@ -54,18 +54,11 @@
             </Setter>
         </Style>
 
-        <Style x:Key="ToolLabelStyle" TargetType="TextBlock">
-            <Setter Property="Margin" Value="0,5,0,0" />
-            <Setter Property="HorizontalAlignment" Value="Center" />
-            <Setter Property="FontSize" Value="11" />
-            <Setter Property="Foreground" Value="#E6EBF2" />
-        </Style>
-
         <Style x:Key="ToolbarSeparatorStyle" TargetType="Separator">
             <Setter Property="Width" Value="1" />
-            <Setter Property="Height" Value="36" />
-            <Setter Property="Margin" Value="5,0" />
-            <Setter Property="Background" Value="#445064" />
+            <Setter Property="Height" Value="28" />
+            <Setter Property="Margin" Value="4,0" />
+            <Setter Property="Background" Value="#3D424B" />
         </Style>
 
         <Style x:Key="ResultCopyButtonStyle" TargetType="Button">
@@ -186,11 +179,11 @@
             </Canvas>
 
             <Border x:Name="QuickToolbar"
-                    Padding="8,6"
-                    Background="#F21B2029"
-                    BorderBrush="#435064"
+                    Padding="10,6"
+                    Background="#F21B1B1D"
+                    BorderBrush="#343840"
                     BorderThickness="1"
-                    CornerRadius="9"
+                    CornerRadius="10"
                     Visibility="Collapsed">
                 <Border.Effect>
                     <DropShadowEffect BlurRadius="18"
@@ -203,85 +196,74 @@
                             Click="SelectionToolButton_Click"
                             ToolTip="重新选择截图区域"
                             AutomationProperties.Name="选择区域">
-                        <StackPanel>
-                            <iconPacks:PackIconMaterial Width="23"
-                                                       Height="23"
-                                                       HorizontalAlignment="Center"
-                                                       Kind="SelectionDrag" />
-                            <TextBlock Style="{StaticResource ToolLabelStyle}"
-                                       Text="选区" />
-                        </StackPanel>
+                        <iconPacks:PackIconMaterial Width="24"
+                                                   Height="24"
+                                                   Kind="SelectionDrag" />
                     </Button>
                     <Button x:Name="RectangleToolButton"
                             Style="{StaticResource QuickToolButtonStyle}"
                             Click="RectangleToolButton_Click"
                             ToolTip="画矩形"
                             AutomationProperties.Name="矩形">
-                        <StackPanel>
-                            <iconPacks:PackIconMaterial Width="23"
-                                                       Height="23"
-                                                       HorizontalAlignment="Center"
-                                                       Kind="RectangleOutline" />
-                            <TextBlock Style="{StaticResource ToolLabelStyle}"
-                                       Text="矩形" />
-                        </StackPanel>
+                        <iconPacks:PackIconMaterial Width="24"
+                                                   Height="24"
+                                                   Kind="RectangleOutline" />
                     </Button>
                     <Button x:Name="PenToolButton"
                             Style="{StaticResource QuickToolButtonStyle}"
                             Click="PenToolButton_Click"
                             ToolTip="自由画笔"
                             AutomationProperties.Name="画笔">
-                        <StackPanel>
-                            <iconPacks:PackIconMaterial Width="23"
-                                                       Height="23"
-                                                       HorizontalAlignment="Center"
-                                                       Kind="Draw" />
-                            <TextBlock Style="{StaticResource ToolLabelStyle}"
-                                       Text="画笔" />
-                        </StackPanel>
+                        <iconPacks:PackIconMaterial Width="24"
+                                                   Height="24"
+                                                   Kind="Draw" />
                     </Button>
                     <Button x:Name="TextToolButton"
                             Style="{StaticResource QuickToolButtonStyle}"
                             Click="TextToolButton_Click"
                             ToolTip="添加文字"
                             AutomationProperties.Name="文字">
-                        <StackPanel>
-                            <iconPacks:PackIconMaterial Width="23"
-                                                       Height="23"
-                                                       HorizontalAlignment="Center"
-                                                       Kind="FormatText" />
-                            <TextBlock Style="{StaticResource ToolLabelStyle}"
-                                       Text="文字" />
-                        </StackPanel>
+                        <iconPacks:PackIconMaterial Width="24"
+                                                   Height="24"
+                                                   Kind="FormatText" />
                     </Button>
                     <Button x:Name="ColorToolButton"
                             Style="{StaticResource QuickToolButtonStyle}"
                             Click="ColorToolButton_Click"
                             ToolTip="标注颜色"
                             AutomationProperties.Name="颜色">
-                        <StackPanel>
-                            <iconPacks:PackIconMaterial Width="23"
-                                                       Height="23"
-                                                       HorizontalAlignment="Center"
-                                                       Kind="PaletteOutline"
-                                                       Foreground="#FF4D4F" />
-                            <TextBlock Style="{StaticResource ToolLabelStyle}"
-                                       Text="颜色" />
-                        </StackPanel>
+                        <iconPacks:PackIconMaterial Width="24"
+                                                   Height="24"
+                                                   Kind="PaletteOutline"
+                                                   Foreground="#FF4D4F" />
                     </Button>
                     <Button x:Name="ThicknessToolButton"
                             Style="{StaticResource QuickToolButtonStyle}"
                             Click="ThicknessToolButton_Click"
                             ToolTip="线条粗细"
                             AutomationProperties.Name="粗细">
-                        <StackPanel>
-                            <iconPacks:PackIconMaterial Width="23"
-                                                       Height="23"
-                                                       HorizontalAlignment="Center"
-                                                       Kind="FormatLineWeight" />
-                            <TextBlock Style="{StaticResource ToolLabelStyle}"
-                                       Text="粗细" />
-                        </StackPanel>
+                        <iconPacks:PackIconMaterial Width="24"
+                                                   Height="24"
+                                                   Kind="FormatLineWeight" />
+                    </Button>
+                    <Separator Style="{StaticResource ToolbarSeparatorStyle}" />
+                    <Button x:Name="OcrButton"
+                            Style="{StaticResource QuickToolButtonStyle}"
+                            Click="OcrButton_Click"
+                            ToolTip="识别图片中的文字"
+                            AutomationProperties.Name="识别文字">
+                        <iconPacks:PackIconMaterial Width="24"
+                                                   Height="24"
+                                                   Kind="TextRecognition" />
+                    </Button>
+                    <Button x:Name="TranslateButton"
+                            Style="{StaticResource QuickToolButtonStyle}"
+                            Click="TranslateButton_Click"
+                            ToolTip="识别并翻译到图片"
+                            AutomationProperties.Name="翻译为目标语言">
+                        <iconPacks:PackIconMaterial Width="24"
+                                                   Height="24"
+                                                   Kind="Translate" />
                     </Button>
                     <Separator Style="{StaticResource ToolbarSeparatorStyle}" />
                     <Button x:Name="UndoButton"
@@ -289,117 +271,47 @@
                             Click="UndoButton_Click"
                             ToolTip="撤销上一条标注"
                             AutomationProperties.Name="撤销">
-                        <StackPanel>
-                            <iconPacks:PackIconMaterial Width="23"
-                                                       Height="23"
-                                                       HorizontalAlignment="Center"
-                                                       Kind="Undo" />
-                            <TextBlock Style="{StaticResource ToolLabelStyle}"
-                                       Text="撤销" />
-                        </StackPanel>
-                    </Button>
-                    <Button x:Name="OcrButton"
-                            Style="{StaticResource QuickToolButtonStyle}"
-                            Click="OcrButton_Click"
-                            ToolTip="识别图片中的文字"
-                            AutomationProperties.Name="识别文字">
-                        <StackPanel>
-                            <iconPacks:PackIconMaterial Width="23"
-                                                       Height="23"
-                                                       HorizontalAlignment="Center"
-                                                       Kind="TextRecognition" />
-                            <TextBlock Style="{StaticResource ToolLabelStyle}"
-                                       Text="识别文字" />
-                        </StackPanel>
-                    </Button>
-                    <Button x:Name="TranslateButton"
-                            Width="78"
-                            Style="{StaticResource QuickToolButtonStyle}"
-                            Click="TranslateButton_Click"
-                            ToolTip="识别并翻译"
-                            AutomationProperties.Name="翻译为目标语言">
-                        <StackPanel>
-                            <iconPacks:PackIconMaterial Width="23"
-                                                       Height="23"
-                                                       HorizontalAlignment="Center"
-                                                       Kind="Translate" />
-                            <TextBlock Style="{StaticResource ToolLabelStyle}"
-                                       Text="翻译印尼语" />
-                        </StackPanel>
-                    </Button>
-                    <Separator Style="{StaticResource ToolbarSeparatorStyle}" />
-                    <Button x:Name="CopyImageButton"
-                            Style="{StaticResource QuickToolButtonStyle}"
-                            Click="CopyImageButton_Click"
-                            ToolTip="复制当前图片到剪贴板"
-                            AutomationProperties.Name="复制图片">
-                        <StackPanel>
-                            <iconPacks:PackIconMaterial Width="23"
-                                                       Height="23"
-                                                       HorizontalAlignment="Center"
-                                                       Kind="ContentCopy" />
-                            <TextBlock Style="{StaticResource ToolLabelStyle}"
-                                       Text="复制图片" />
-                        </StackPanel>
+                        <iconPacks:PackIconMaterial Width="24"
+                                                   Height="24"
+                                                   Kind="Undo" />
                     </Button>
                     <Button x:Name="SaveImageButton"
                             Style="{StaticResource QuickToolButtonStyle}"
                             Click="SaveImageButton_Click"
                             ToolTip="保存为 PNG"
                             AutomationProperties.Name="保存 PNG">
-                        <StackPanel>
-                            <iconPacks:PackIconMaterial Width="23"
-                                                       Height="23"
-                                                       HorizontalAlignment="Center"
-                                                       Kind="ContentSaveOutline" />
-                            <TextBlock Style="{StaticResource ToolLabelStyle}"
-                                       Text="保存 PNG" />
-                        </StackPanel>
+                        <iconPacks:PackIconMaterial Width="24"
+                                                   Height="24"
+                                                   Kind="DownloadOutline" />
                     </Button>
+                    <Button x:Name="AdvancedEditorButton"
+                            Style="{StaticResource QuickToolButtonStyle}"
+                            Click="AdvancedEditorButton_Click"
+                            ToolTip="在高级编辑器中继续"
+                            AutomationProperties.Name="高级编辑">
+                        <iconPacks:PackIconMaterial Width="24"
+                                                   Height="24"
+                                                   Kind="OpenInNew" />
+                    </Button>
+                    <Separator Style="{StaticResource ToolbarSeparatorStyle}" />
                     <Button Style="{StaticResource QuickToolButtonStyle}"
                             Click="CancelButton_Click"
-                            ToolTip="取消截图"
-                            AutomationProperties.Name="取消">
-                        <StackPanel>
-                            <iconPacks:PackIconMaterial Width="23"
-                                                       Height="23"
-                                                       HorizontalAlignment="Center"
-                                                       Kind="Close" />
-                            <TextBlock Style="{StaticResource ToolLabelStyle}"
-                                       Text="取消" />
-                        </StackPanel>
+                            ToolTip="取消截图（Esc）"
+                            AutomationProperties.Name="取消截图">
+                        <iconPacks:PackIconMaterial Width="26"
+                                                   Height="26"
+                                                   Foreground="#FF4D5A"
+                                                   Kind="Close" />
                     </Button>
                     <Button x:Name="CompleteButton"
                             Style="{StaticResource QuickToolButtonStyle}"
-                            Background="#3978F6"
                             Click="CompleteButton_Click"
-                            ToolTip="复制当前图片并完成"
-                            AutomationProperties.Name="完成">
-                        <StackPanel>
-                            <iconPacks:PackIconMaterial Width="24"
-                                                       Height="24"
-                                                       HorizontalAlignment="Center"
-                                                       Kind="Check" />
-                            <TextBlock Style="{StaticResource ToolLabelStyle}"
-                                       Foreground="White"
-                                       Text="完成" />
-                        </StackPanel>
-                    </Button>
-                    <Separator Style="{StaticResource ToolbarSeparatorStyle}" />
-                    <Button x:Name="AdvancedEditorButton"
-                            Width="92"
-                            Style="{StaticResource QuickToolButtonStyle}"
-                            Click="AdvancedEditorButton_Click"
-                            ToolTip="在完整编辑器中继续"
-                            AutomationProperties.Name="高级编辑">
-                        <StackPanel>
-                            <iconPacks:PackIconMaterial Width="22"
-                                                       Height="22"
-                                                       HorizontalAlignment="Center"
-                                                       Kind="OpenInNew" />
-                            <TextBlock Style="{StaticResource ToolLabelStyle}"
-                                       Text="高级编辑" />
-                        </StackPanel>
+                            ToolTip="完成并复制到剪贴板（Enter / 双击）"
+                            AutomationProperties.Name="完成并复制到剪贴板">
+                        <iconPacks:PackIconMaterial Width="28"
+                                                   Height="28"
+                                                   Foreground="#18C982"
+                                                   Kind="Check" />
                     </Button>
                 </StackPanel>
             </Border>
@@ -609,7 +521,7 @@
                 CornerRadius="6"
                 IsHitTestVisible="False">
             <TextBlock Foreground="White"
-                       Text="拖动选择区域 · 右键或 Esc 取消" />
+                       Text="拖动选择区域 · Esc 取消 · Enter / 双击完成并复制" />
         </Border>
     </Grid>
 </Window>

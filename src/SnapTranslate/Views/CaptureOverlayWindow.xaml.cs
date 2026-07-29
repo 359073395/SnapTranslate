@@ -1,5 +1,6 @@
 using System.Drawing;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -672,12 +673,6 @@ public partial class CaptureOverlayWindow : Window
         ShowStatus(successMessage, PackIconMaterialKind.ContentCopy);
     }
 
-    private void CopyImageButton_Click(object sender, RoutedEventArgs e)
-    {
-        Clipboard.SetImage(RenderComposite());
-        ShowStatus("图片已复制到剪贴板", PackIconMaterialKind.ContentCopy);
-    }
-
     private void SaveImageButton_Click(object sender, RoutedEventArgs e)
     {
         SaveFileDialog dialog = new()
@@ -707,15 +702,49 @@ public partial class CaptureOverlayWindow : Window
 
     private void CompleteAndCopy()
     {
-        if (!_selectionReady)
+        if (!_selectionReady || _busy)
         {
             return;
         }
 
-        Clipboard.SetImage(RenderComposite());
-        _accepted = true;
-        Close();
-        CaptureCompleted?.Invoke();
+        try
+        {
+            CopyCompositeToClipboard();
+            _accepted = true;
+            Close();
+            CaptureCompleted?.Invoke();
+        }
+        catch (Exception exception)
+        {
+            ShowWorkError(exception);
+        }
+    }
+
+    private void CopyCompositeToClipboard()
+    {
+        BitmapSource result = RenderComposite();
+        ExternalException? clipboardException = null;
+        for (int attempt = 0; attempt < 5; attempt++)
+        {
+            try
+            {
+                Clipboard.SetImage(result);
+                Clipboard.Flush();
+                return;
+            }
+            catch (ExternalException exception)
+            {
+                clipboardException = exception;
+                if (attempt < 4)
+                {
+                    Thread.Sleep(35 * (attempt + 1));
+                }
+            }
+        }
+
+        throw new InvalidOperationException(
+            "剪贴板正被其他程序占用，请稍后再试。",
+            clipboardException);
     }
 
     private void AdvancedEditorButton_Click(object sender, RoutedEventArgs e)
