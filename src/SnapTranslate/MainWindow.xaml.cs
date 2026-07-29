@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -14,24 +15,33 @@ public partial class MainWindow : Window
 {
     private readonly SettingsService _settingsService = new();
     private readonly GlobalHotkeyService _hotkeyService = new();
-    private AppSettings _settings;
+    private AppSettings _settings = new();
     private Key _pendingHotkeyKey = Key.A;
     private ModifierKeys _pendingHotkeyModifiers = ModifierKeys.Control | ModifierKeys.Shift;
     private bool _captureInProgress;
+    private bool _exitRequested;
+    private bool _initialized;
     private bool _recordingHotkey;
 
     public MainWindow()
     {
         InitializeComponent();
 
-        _settings = _settingsService.Load();
         Loaded += MainWindow_Loaded;
+        Closing += MainWindow_Closing;
         Closed += MainWindow_Closed;
         _hotkeyService.Pressed += HotkeyService_Pressed;
     }
 
     private void MainWindow_Loaded(object sender, RoutedEventArgs e)
     {
+        if (_initialized)
+        {
+            return;
+        }
+
+        _initialized = true;
+        _settings = _settingsService.Load();
         LoadLanguageOptions();
         ApplySettingsToControls();
 
@@ -51,13 +61,25 @@ public partial class MainWindow : Window
 
     private void ApplySettingsToControls()
     {
-        OcrLanguageComboBox.SelectedValue = _settings.OcrLanguage;
-        if (OcrLanguageComboBox.SelectedIndex < 0 && OcrLanguageComboBox.Items.Count > 0)
-        {
-            OcrLanguageComboBox.SelectedIndex = 0;
-        }
+        OcrLanguageComboBox.SelectedItem =
+            OcrLanguageComboBox.Items
+                .OfType<LanguageOption>()
+                .FirstOrDefault(
+                    option => string.Equals(
+                        option.Code,
+                        _settings.OcrLanguage,
+                        StringComparison.OrdinalIgnoreCase))
+            ?? OcrLanguageComboBox.Items.OfType<LanguageOption>().FirstOrDefault();
 
-        TargetLanguageComboBox.SelectedValue = _settings.TargetLanguage;
+        TargetLanguageComboBox.SelectedItem =
+            TargetLanguageComboBox.Items
+                .OfType<LanguageOption>()
+                .FirstOrDefault(
+                    option => string.Equals(
+                        option.Code,
+                        _settings.TargetLanguage,
+                        StringComparison.OrdinalIgnoreCase))
+            ?? TargetLanguageComboBox.Items.OfType<LanguageOption>().FirstOrDefault();
         TranslationProviderComboBox.SelectedIndex =
             string.Equals(_settings.TranslationProvider, "OpenAI", StringComparison.OrdinalIgnoreCase) ? 1 : 0;
         OpenAiEndpointTextBox.Text = _settings.OpenAiEndpoint;
@@ -70,8 +92,11 @@ public partial class MainWindow : Window
     private void ReadSettingsFromControls()
     {
         _settings.OcrLanguage =
-            OcrLanguageComboBox.SelectedValue?.ToString() ?? OcrService.AutoLanguageTag;
-        _settings.TargetLanguage = TargetLanguageComboBox.SelectedValue?.ToString() ?? "zh-CN";
+            (OcrLanguageComboBox.SelectedItem as LanguageOption)?.Code
+            ?? OcrService.AutoLanguageTag;
+        _settings.TargetLanguage =
+            (TargetLanguageComboBox.SelectedItem as LanguageOption)?.Code
+            ?? "zh-CN";
         _settings.TranslationProvider =
             (TranslationProviderComboBox.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? "GoogleWeb";
         _settings.OpenAiEndpoint = OpenAiEndpointTextBox.Text.Trim();
@@ -104,9 +129,9 @@ public partial class MainWindow : Window
         try
         {
             CapturedScreen capture = ScreenCaptureService.CaptureMonitorUnderCursor();
-            CaptureOverlayWindow overlay = new(capture);
+            CaptureOverlayWindow overlay = new(capture, _settings);
 
-            overlay.CaptureAccepted += bitmap =>
+            overlay.AdvancedEditRequested += bitmap =>
             {
                 Dispatcher.BeginInvoke(() =>
                 {
@@ -116,6 +141,7 @@ public partial class MainWindow : Window
                     editor.Activate();
                 });
             };
+            overlay.CaptureCompleted += RestoreMainWindow;
             overlay.CaptureCancelled += RestoreMainWindow;
             overlay.Show();
             overlay.Activate();
@@ -358,6 +384,12 @@ public partial class MainWindow : Window
         UpdateProviderPanel();
     }
 
+    private void ExitApplicationButton_Click(object sender, RoutedEventArgs e)
+    {
+        _exitRequested = true;
+        Close();
+    }
+
     private void UpdateProviderPanel()
     {
         if (OpenAiSettingsPanel is null || TranslationProviderComboBox is null)
@@ -375,5 +407,16 @@ public partial class MainWindow : Window
     private void MainWindow_Closed(object? sender, EventArgs e)
     {
         _hotkeyService.Dispose();
+    }
+
+    private void MainWindow_Closing(object? sender, CancelEventArgs e)
+    {
+        if (_exitRequested)
+        {
+            return;
+        }
+
+        e.Cancel = true;
+        WindowState = WindowState.Minimized;
     }
 }
