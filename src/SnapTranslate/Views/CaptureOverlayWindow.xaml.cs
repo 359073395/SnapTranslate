@@ -36,7 +36,10 @@ public partial class CaptureOverlayWindow : Window
     {
         Selection,
         Rectangle,
+        Ellipse,
+        Arrow,
         Pen,
+        Mosaic,
         Text
     }
 
@@ -56,6 +59,10 @@ public partial class CaptureOverlayWindow : Window
     private Rect _selection;
     private Int32Rect _selectionPixelRect;
     private Shape? _activeShape;
+    private Canvas? _activeArrow;
+    private Canvas? _activeMosaicStroke;
+    private HashSet<(int X, int Y)>? _activeMosaicCells;
+    private Point? _lastMosaicPoint;
     private bool _selecting;
     private bool _drawing;
     private bool _selectionReady;
@@ -158,20 +165,29 @@ public partial class CaptureOverlayWindow : Window
             return;
         }
 
-        if (!_drawing || _activeShape is null)
+        if (!_drawing)
         {
             return;
         }
 
         Point localPoint = ClampSelectionPoint(ToSelectionPoint(e.GetPosition(RootGrid)));
-        if (_activeShape is Rectangle rectangle)
+        if (_activeArrow is not null)
         {
+            UpdateArrow(_activeArrow, _start, localPoint);
+        }
+        else if (_activeMosaicStroke is not null)
+        {
+            AddMosaicStrokeTo(localPoint);
+        }
+        else if (_activeShape is Rectangle or Ellipse)
+        {
+            Shape shape = _activeShape;
             double left = Math.Min(_start.X, localPoint.X);
             double top = Math.Min(_start.Y, localPoint.Y);
-            Canvas.SetLeft(rectangle, left);
-            Canvas.SetTop(rectangle, top);
-            rectangle.Width = Math.Abs(localPoint.X - _start.X);
-            rectangle.Height = Math.Abs(localPoint.Y - _start.Y);
+            Canvas.SetLeft(shape, left);
+            Canvas.SetTop(shape, top);
+            shape.Width = Math.Abs(localPoint.X - _start.X);
+            shape.Height = Math.Abs(localPoint.Y - _start.Y);
         }
         else if (_activeShape is Polyline line)
         {
@@ -201,6 +217,10 @@ public partial class CaptureOverlayWindow : Window
         {
             _drawing = false;
             _activeShape = null;
+            _activeArrow = null;
+            _activeMosaicStroke = null;
+            _activeMosaicCells = null;
+            _lastMosaicPoint = null;
             ReleaseMouseCapture();
             ShowStatus("标注已添加", PackIconMaterialKind.CheckCircleOutline);
             e.Handled = true;
@@ -284,17 +304,45 @@ public partial class CaptureOverlayWindow : Window
         _drawing = true;
         CaptureMouse();
 
-        if (_tool == ToolMode.Rectangle)
+        if (_tool == ToolMode.Rectangle || _tool == ToolMode.Ellipse)
         {
-            Rectangle rectangle = new()
+            Shape shape = _tool == ToolMode.Rectangle
+                ? new Rectangle()
+                : new Ellipse();
+            shape.Stroke = _drawingBrush;
+            shape.StrokeThickness = _drawingThickness;
+            shape.Fill = Brushes.Transparent;
+            Canvas.SetLeft(shape, point.X);
+            Canvas.SetTop(shape, point.Y);
+            _activeShape = shape;
+            AddActiveAnnotation(shape);
+        }
+        else if (_tool == ToolMode.Arrow)
+        {
+            Canvas arrow = new()
             {
-                Stroke = _drawingBrush,
-                StrokeThickness = _drawingThickness,
-                Fill = Brushes.Transparent
+                Width = AnnotationCanvas.Width,
+                Height = AnnotationCanvas.Height,
+                IsHitTestVisible = false
             };
-            Canvas.SetLeft(rectangle, point.X);
-            Canvas.SetTop(rectangle, point.Y);
-            _activeShape = rectangle;
+            CreateArrowLines(arrow);
+            UpdateArrow(arrow, point, point);
+            _activeArrow = arrow;
+            AddActiveAnnotation(arrow);
+        }
+        else if (_tool == ToolMode.Mosaic)
+        {
+            Canvas stroke = new()
+            {
+                Width = AnnotationCanvas.Width,
+                Height = AnnotationCanvas.Height,
+                IsHitTestVisible = false
+            };
+            _activeMosaicStroke = stroke;
+            _activeMosaicCells = [];
+            _lastMosaicPoint = point;
+            AddActiveAnnotation(stroke);
+            AddMosaicStamp(point);
         }
         else
         {
@@ -308,10 +356,149 @@ public partial class CaptureOverlayWindow : Window
             };
             line.Points.Add(point);
             _activeShape = line;
+            AddActiveAnnotation(line);
+        }
+    }
+
+    private void AddActiveAnnotation(UIElement annotation)
+    {
+        AnnotationCanvas.Children.Add(annotation);
+        _annotations.Add(annotation);
+    }
+
+    private void CreateArrowLines(Canvas arrow)
+    {
+        for (int index = 0; index < 3; index++)
+        {
+            arrow.Children.Add(new Line
+            {
+                Stroke = _drawingBrush,
+                StrokeThickness = _drawingThickness,
+                StrokeStartLineCap = PenLineCap.Round,
+                StrokeEndLineCap = PenLineCap.Round
+            });
+        }
+    }
+
+    private static void UpdateArrow(Canvas arrow, Point start, Point end)
+    {
+        if (arrow.Children.Count != 3 ||
+            arrow.Children[0] is not Line shaft ||
+            arrow.Children[1] is not Line headOne ||
+            arrow.Children[2] is not Line headTwo)
+        {
+            return;
         }
 
-        AnnotationCanvas.Children.Add(_activeShape);
-        _annotations.Add(_activeShape);
+        shaft.X1 = start.X;
+        shaft.Y1 = start.Y;
+        shaft.X2 = end.X;
+        shaft.Y2 = end.Y;
+
+        double deltaX = end.X - start.X;
+        double deltaY = end.Y - start.Y;
+        double distance = Math.Sqrt(deltaX * deltaX + deltaY * deltaY);
+        double angle = Math.Atan2(deltaY, deltaX);
+        double headLength = Math.Clamp(distance * 0.25, 12, 32);
+        const double headAngle = Math.PI / 6;
+
+        SetArrowHeadLine(headOne, end, angle + Math.PI - headAngle, headLength);
+        SetArrowHeadLine(headTwo, end, angle + Math.PI + headAngle, headLength);
+    }
+
+    private static void SetArrowHeadLine(
+        Line line,
+        Point end,
+        double angle,
+        double length)
+    {
+        line.X1 = end.X;
+        line.Y1 = end.Y;
+        line.X2 = end.X + Math.Cos(angle) * length;
+        line.Y2 = end.Y + Math.Sin(angle) * length;
+    }
+
+    private void AddMosaicStamp(Point point)
+    {
+        if (_activeMosaicStroke is null ||
+            _activeMosaicCells is null ||
+            _selectionBitmap is null)
+        {
+            return;
+        }
+
+        double cellSize = Math.Clamp(8 + _drawingThickness, 10, 18);
+        double brushRadius = Math.Clamp(18 + _drawingThickness * 2, 22, 40);
+        int minimumX = Math.Max(0, (int)Math.Floor((point.X - brushRadius) / cellSize));
+        int maximumX = Math.Min(
+            (int)Math.Ceiling(AnnotationCanvas.Width / cellSize) - 1,
+            (int)Math.Floor((point.X + brushRadius) / cellSize));
+        int minimumY = Math.Max(0, (int)Math.Floor((point.Y - brushRadius) / cellSize));
+        int maximumY = Math.Min(
+            (int)Math.Ceiling(AnnotationCanvas.Height / cellSize) - 1,
+            (int)Math.Floor((point.Y + brushRadius) / cellSize));
+
+        double pixelScaleX = _selectionBitmap.Width / Math.Max(1, AnnotationCanvas.Width);
+        double pixelScaleY = _selectionBitmap.Height / Math.Max(1, AnnotationCanvas.Height);
+        for (int cellY = minimumY; cellY <= maximumY; cellY++)
+        {
+            for (int cellX = minimumX; cellX <= maximumX; cellX++)
+            {
+                double cellCenterX = (cellX + 0.5) * cellSize;
+                double cellCenterY = (cellY + 0.5) * cellSize;
+                double deltaX = cellCenterX - point.X;
+                double deltaY = cellCenterY - point.Y;
+                if (deltaX * deltaX + deltaY * deltaY > brushRadius * brushRadius ||
+                    !_activeMosaicCells.Add((cellX, cellY)))
+                {
+                    continue;
+                }
+
+                int pixelX = Math.Clamp(
+                    (int)Math.Round(cellCenterX * pixelScaleX),
+                    0,
+                    _selectionBitmap.Width - 1);
+                int pixelY = Math.Clamp(
+                    (int)Math.Round(cellCenterY * pixelScaleY),
+                    0,
+                    _selectionBitmap.Height - 1);
+                System.Drawing.Color sampled = _selectionBitmap.GetPixel(pixelX, pixelY);
+                Rectangle tile = new()
+                {
+                    Width = Math.Min(
+                        cellSize + 0.75,
+                        AnnotationCanvas.Width - cellX * cellSize),
+                    Height = Math.Min(
+                        cellSize + 0.75,
+                        AnnotationCanvas.Height - cellY * cellSize),
+                    Fill = new SolidColorBrush(
+                        MediaColor.FromRgb(sampled.R, sampled.G, sampled.B)),
+                    SnapsToDevicePixels = true
+                };
+                Canvas.SetLeft(tile, cellX * cellSize);
+                Canvas.SetTop(tile, cellY * cellSize);
+                _activeMosaicStroke.Children.Add(tile);
+            }
+        }
+    }
+
+    private void AddMosaicStrokeTo(Point point)
+    {
+        Point previous = _lastMosaicPoint ?? point;
+        double deltaX = point.X - previous.X;
+        double deltaY = point.Y - previous.Y;
+        double distance = Math.Sqrt(deltaX * deltaX + deltaY * deltaY);
+        double step = Math.Max(5, 7 + _drawingThickness * 0.5);
+        int stampCount = Math.Max(1, (int)Math.Ceiling(distance / step));
+        for (int index = 1; index <= stampCount; index++)
+        {
+            double progress = index / (double)stampCount;
+            AddMosaicStamp(new Point(
+                previous.X + deltaX * progress,
+                previous.Y + deltaY * progress));
+        }
+
+        _lastMosaicPoint = point;
     }
 
     private void AddText(Point point)
@@ -357,8 +544,17 @@ public partial class CaptureOverlayWindow : Window
     private void RectangleToolButton_Click(object sender, RoutedEventArgs e) =>
         SetTool(ToolMode.Rectangle, RectangleToolButton);
 
+    private void EllipseToolButton_Click(object sender, RoutedEventArgs e) =>
+        SetTool(ToolMode.Ellipse, EllipseToolButton);
+
+    private void ArrowToolButton_Click(object sender, RoutedEventArgs e) =>
+        SetTool(ToolMode.Arrow, ArrowToolButton);
+
     private void PenToolButton_Click(object sender, RoutedEventArgs e) =>
         SetTool(ToolMode.Pen, PenToolButton);
+
+    private void MosaicToolButton_Click(object sender, RoutedEventArgs e) =>
+        SetTool(ToolMode.Mosaic, MosaicToolButton);
 
     private void TextToolButton_Click(object sender, RoutedEventArgs e) =>
         SetTool(ToolMode.Text, TextToolButton);
@@ -370,7 +566,10 @@ public partial class CaptureOverlayWindow : Window
                  {
                      SelectionToolButton,
                      RectangleToolButton,
+                     EllipseToolButton,
+                     ArrowToolButton,
                      PenToolButton,
+                     MosaicToolButton,
                      TextToolButton
                  })
         {

@@ -1,66 +1,71 @@
-# SnapTranslate v0.2.4 Design QA
+# SnapTranslate v0.2.5 Design QA
 
 ## Reference and implementation
 
-- Source visual truth: `G:\GitHub\SnapTranslate\artifacts\ux-qa-v0.2.4\source-wechat-toolbar.png`
-- Source pixel dimensions: 1048 × 350
+- Source visual truth: `G:\GitHub\SnapTranslate\artifacts\ux-qa-v0.2.5\source-wechat-toolbar.png`
+- Source pixel dimensions: 1048 × 350 at 72 dpi
 - Implementation: `G:\GitHub\SnapTranslate\src\SnapTranslate\Views\CaptureOverlayWindow.xaml`
-- Implementation screenshot: `G:\GitHub\SnapTranslate\artifacts\ux-qa-v0.2.4\01-wechat-toolbar.png`
-- Implementation pixel dimensions: 1536 × 864
-- Full-view comparison: `G:\GitHub\SnapTranslate\artifacts\ux-qa-v0.2.4\comparison-full.png`
-- Focused toolbar comparison: `G:\GitHub\SnapTranslate\artifacts\ux-qa-v0.2.4\comparison-toolbar.png`
+- Implementation screenshot: `G:\GitHub\SnapTranslate\artifacts\ux-qa-v0.2.5\implementation-annotated-overlay.png`
+- Implementation pixel dimensions: 1536 × 864 at 120 dpi
+- Focused implementation crop: `G:\GitHub\SnapTranslate\artifacts\ux-qa-v0.2.5\implementation-toolbar-region.png`
+- Combined comparison input: `G:\GitHub\SnapTranslate\artifacts\ux-qa-v0.2.5\source-vs-implementation.png`
 
 ## Viewport and state
 
 - Windows 11 desktop, 1536 × 864 logical viewport
 - Display density: 125% (1920 × 1080 physical display)
-- State: completed selection with the compact toolbar visible below the selection
-- Density normalization: the focused comparison normalizes both toolbar crops to the same 96 px height while preserving aspect ratio; the full comparison preserves each screenshot's original aspect ratio inside equal-width panels
+- Source state: WeChat selection with the compact toolbar below the selected region
+- Implementation state: SnapTranslate selection with circle, arrow, and mosaic annotations visible; mosaic is the selected tool
+- Density normalization: the implementation was cropped to the same 1048 px width as the source without resampling. The combined comparison places both visible states in one 1048 px-wide image.
 
-## Full-view comparison
+## Full-view comparison evidence
 
-Both screens use a dimmed desktop, a visible selection frame with resize handles, and a dark floating toolbar attached below the selection. The implementation preserves SnapTranslate's blue dashed selection frame and size badge while adopting the reference's compact icon-only action row.
+The combined comparison shows both the source and implementation in one image. Both keep the selected content above a single near-black floating action row, use compact icon-only controls, visually group the workflow with separators, and terminate with a red cancel action followed by a green completion action. SnapTranslate intentionally keeps its blue dashed selection border and size badge.
 
-## Focused-region comparison
+## Focused-region comparison evidence
 
-The focused toolbar comparison confirms the same workflow rhythm:
+The toolbar region is large enough to inspect every icon and its spacing, so no additional micro-crops were needed. The annotation sequence now follows the supplied WeChat reference more closely:
 
-1. drawing and annotation tools
-2. OCR and translation
-3. undo, save, and follow-up editing
-4. red cancel and green completion at the far right
+1. selection and shape tools
+2. rectangle, circle, directional arrow, pen, mosaic, and text
+3. color and stroke controls
+4. OCR and translation
+5. undo, save, and Advanced Editor
+6. red cancel and green completion
 
-SnapTranslate intentionally exposes only its existing capabilities, so it does not add WeChat-only ellipse, emoji, arrow, mosaic, long-screenshot, pin, or share tools. It keeps “重新选择” at the far left and “高级编辑” before cancel, preserving the previously approved product scope.
+WeChat-only emoji, long screenshot, pin, and share actions remain intentionally absent because they are outside the current product scope.
 
-## Fidelity review
+## Required fidelity surfaces
 
-- Fonts and typography: the toolbar is icon-only like the source; Segoe UI remains limited to the size badge, hint, results, and tooltips.
-- Spacing and layout rhythm: 52 × 48 px actions, compact separators, 10 × 6 px toolbar padding, 10 px radius, and consistent center alignment match the source's density.
-- Colors and visual tokens: dark near-black surface, cool-gray border, white utility icons, red cancellation, and green completion match the reference hierarchy.
-- Image quality and icons: all actions use real vector Material icons; there are no emoji, handcrafted SVGs, text glyph substitutes, or raster placeholders.
-- Copy and content: the redundant image-copy action is removed. Completion, Enter, and double-click copy the final composited screenshot; source-text and translated-text copy controls remain in their corresponding result sections.
-- Accessibility and states: every icon action exposes an automation name and tooltip; selected tools retain a visible blue background; busy and error states still disable completion-sensitive actions.
+- Fonts and typography: the toolbar remains icon-only. Segoe UI is used only for the size badge, hints, results, status, and tooltips, with no visible wrapping or truncation in the tested state.
+- Spacing and layout rhythm: 52 × 48 px actions, compact 1 px separators, 10 × 6 px toolbar padding, 10 px radius, and centered vertical alignment preserve the reference density. The enlarged action set still fits the 1536 px viewport.
+- Colors and visual tokens: the near-black toolbar, cool-gray border, white utility icons, blue selected-tool background, red cancel, and green completion maintain the reference hierarchy and sufficient contrast.
+- Image quality and asset fidelity: all toolbar icons use MahApps Material vector icons. There are no emoji substitutes, handcrafted SVGs, raster placeholders, or blurred toolbar assets.
+- Copy and content: tooltips and automation names clearly identify 圆形、箭头 and 马赛克. Completion, Enter, and double-click retain the final-image clipboard behavior.
+- Accessibility and states: all three new actions are exposed in the Windows accessibility tree. Selected state is visible, and the existing hover, pressed, disabled, and busy treatments remain intact.
 
 ## Interaction verification
 
-- `Esc` closed the overlay without completing the selection.
-- Green completion closed the overlay and wrote a 775 × 475 image to the clipboard.
-- Enter closed the overlay and wrote a 749 × 437 image to the clipboard.
-- Double-click inside the selection closed the overlay and wrote a 750 × 475 image to the clipboard.
-- Clipboard writes now retry and flush before the overlay closes.
-- OCR, translation, save PNG, undo, and Advanced Editor remain present in the accessibility tree in the intended order.
+- Circle: drag produced a visible ellipse using the current annotation color and thickness.
+- Arrow: drag produced a shaft plus two arrowhead strokes, with direction following the drag endpoint.
+- Mosaic: a sparse first implementation was replaced with interpolated sampling; the revised stroke forms a continuous pixelated brush path.
+- Undo removed the complete mosaic stroke as one action.
+- Enter worked while the circle toolbar button still had keyboard focus, closed the overlay, and wrote the final image to the clipboard.
+- Clipboard verification returned a 1000 × 525 image at 96 dpi for an 809 × 429 logical-pixel selection on the 125% display.
+- Save PNG, Advanced Editor, OCR, translation, red cancel, and green completion remain present in the accessibility tree.
 
 ## Comparison history
 
-1. The previous v0.2.3 toolbar had a separate “复制图片” action, placed undo before OCR/translation, placed Advanced Editor after completion, and used a blue filled completion button. User feedback classified this as a P1 workflow mismatch with the supplied WeChat reference.
-2. The toolbar was reordered into four usage groups, the redundant copy action was removed, Advanced Editor moved before the terminal actions, and cancel/complete changed to red and green icon actions.
-3. Post-fix evidence is recorded in `01-wechat-toolbar.png` and `comparison-toolbar.png`. Real-app checks verified that every completion path writes the final image to the clipboard before closing.
+1. Initial v0.2.5 pass added circle, arrow, and mosaic in the reference order. Real-app testing found that fast mosaic drags could leave visible gaps; this was a P2 functional-polish issue.
+2. Mosaic interpolation was added between mouse samples. Post-fix evidence in `implementation-annotated-overlay.png` shows a continuous pixelated stroke.
+3. Keyboard testing found a pre-existing P1 completion issue when a tool button retained focus: Enter could activate that button instead of completing the screenshot.
+4. Key handling moved to the window preview phase. Post-fix testing confirmed that Enter closes the overlay and copies the composited image even while the circle button retains focus.
 
 ## Findings
 
 - P0: none
-- P1: none after the toolbar-order and completion-semantics fix
-- P2: none
-- P3: SnapTranslate has fewer total toolbar actions than WeChat because unsupported WeChat-only tools were intentionally not introduced in this iteration.
+- P1: none after the Enter focus fix
+- P2: none after continuous mosaic interpolation
+- P3: the implementation toolbar has more utility controls than the visible WeChat reference, but they preserve existing SnapTranslate capabilities and remain clearly grouped.
 
 final result: passed

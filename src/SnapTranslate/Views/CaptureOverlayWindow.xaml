@@ -10,7 +10,7 @@
         Topmost="True"
         Cursor="Cross"
         Background="Black"
-        KeyDown="Window_KeyDown"
+        PreviewKeyDown="Window_KeyDown"
         PreviewMouseLeftButtonDown="Window_MouseLeftButtonDown"
         PreviewMouseMove="Window_MouseMove"
         PreviewMouseLeftButtonUp="Window_MouseLeftButtonUp"
@@ -209,6 +209,24 @@
                                                    Height="24"
                                                    Kind="RectangleOutline" />
                     </Button>
+                    <Button x:Name="EllipseToolButton"
+                            Style="{StaticResource QuickToolButtonStyle}"
+                            Click="EllipseToolButton_Click"
+                            ToolTip="画圆形或椭圆"
+                            AutomationProperties.Name="圆形">
+                        <iconPacks:PackIconMaterial Width="24"
+                                                   Height="24"
+                                                   Kind="CircleOutline" />
+                    </Button>
+                    <Button x:Name="ArrowToolButton"
+                            Style="{StaticResource QuickToolButtonStyle}"
+                            Click="ArrowToolButton_Click"
+                            ToolTip="画箭头"
+                            AutomationProperties.Name="箭头">
+                        <iconPacks:PackIconMaterial Width="24"
+                                                   Height="24"
+                                                   Kind="ArrowTopRight" />
+                    </Button>
                     <Button x:Name="PenToolButton"
                             Style="{StaticResource QuickToolButtonStyle}"
                             Click="PenToolButton_Click"
@@ -217,6 +235,15 @@
                         <iconPacks:PackIconMaterial Width="24"
                                                    Height="24"
                                                    Kind="Draw" />
+                    </Button>
+                    <Button x:Name="MosaicToolButton"
+                            Style="{StaticResource QuickToolButtonStyle}"
+                            Click="MosaicToolButton_Click"
+                            ToolTip="涂抹马赛克"
+                            AutomationProperties.Name="马赛克">
+                        <iconPacks:PackIconMaterial Width="24"
+                                                   Height="24"
+                                                   Kind="Checkerboard" />
                     </Button>
                     <Button x:Name="TextToolButton"
                             Style="{StaticResource QuickToolButtonStyle}"

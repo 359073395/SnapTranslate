@@ -2,7 +2,7 @@
 
 一个面向 Windows 的轻量截图翻译工具：像微信截图一样框选屏幕区域，然后标注、识别文字、翻译、复制或保存。
 
-> 当前版本：`v0.2.4`（可用预览版）
+> 当前版本：`v0.2.5`（可用预览版）
 
 ## 功能
 
@@ -14,7 +14,7 @@
 - OCR 弹层把“复制原文”和“复制译文”放在各自内容旁；图片无需单独复制按钮
 - 需要更大画布、完整文字面板或继续精细调整时，可点击“高级编辑”
 - 鼠标拖动框选当前屏幕区域
-- 矩形、自由画笔、文字标注，可调整颜色和粗细
+- 矩形、圆形、箭头、自由画笔、马赛克和文字标注，可调整颜色和粗细
 - 撤销上一条标注
 - 使用 Windows 本地 OCR 识别文字，默认自动选择更合适的已安装识别引擎
 - 根据 OCR 文字坐标，把译文直接覆盖在图片对应位置
@@ -26,7 +26,7 @@
 
 ## 下载和使用
 
-从 GitHub 的 [Releases](../../releases) 下载 `SnapTranslate-v0.2.4-win-x64.zip`，解压后运行 `SnapTranslate.exe`。发布包自带 .NET 运行时，不需要单独安装。
+从 GitHub 的 [Releases](../../releases) 下载 `SnapTranslate-v0.2.5-win-x64.zip`，解压后运行 `SnapTranslate.exe`。发布包自带 .NET 运行时，不需要单独安装。
 
 系统要求：
 
@@ -94,7 +94,7 @@ dotnet publish src\SnapTranslate\SnapTranslate.csproj `
 - 首版只截取鼠标所在显示器，暂不支持跨屏框选。
 - 图片译文使用深色半透明文字卡覆盖原文，不包含生成式图片修复或背景重绘。
 - 自动 OCR 只能在 Windows 已安装的识别引擎之间选择，未安装对应文字语言包时准确率会受限。
-- 尚未提供自动更新、窗口吸附、箭头/马赛克和托盘常驻。
+- 尚未提供自动更新、窗口吸附和托盘常驻。
 - Google Web 翻译是实验性功能，稳定性不作保证。
 
 欢迎通过 Issue 提交问题和功能建议。
@@ -113,4 +113,4 @@ SnapTranslate 不是 ShareX 官方产品。项目的 Windows OCR 处理流程参
 
 SnapTranslate is a lightweight Windows screenshot translator. Press `Ctrl + Shift + A`, select a region, annotate it, run local Windows OCR, translate text, and copy or save the result.
 
-The `v0.2.4` preview reorganizes the compact toolbar in a WeChat-style workflow, removes the redundant image-copy action, makes the green completion action/Enter/double-click copy the final image automatically, and keeps Escape as cancel. It also supports automatic selection among installed Windows OCR engines, customizable global hotkeys, rectangle/freehand/text annotations, position-aware translation overlays, Indonesian/Bahasa Indonesia, clipboard output, PNG export, an Advanced Editor handoff, and OpenAI-compatible relay settings with Windows-encrypted API key storage. Windows 10 build 19041 or later is required. See the Chinese documentation above for setup details.
+The `v0.2.5` preview adds ellipse, directional arrow, and sampled mosaic annotations to the compact WeChat-style toolbar. All annotation tools support undo, PNG export, clipboard completion, and Advanced Editor handoff. It also keeps automatic Windows OCR engine selection, customizable global hotkeys, position-aware translation overlays, Indonesian/Bahasa Indonesia, and OpenAI-compatible relay settings with Windows-encrypted API key storage. Windows 10 build 19041 or later is required. See the Chinese documentation above for setup details.
