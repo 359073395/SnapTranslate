@@ -150,23 +150,46 @@
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
                             </Grid.RowDefinitions>
                             <TextBlock VerticalAlignment="Center" Text="接口地址" />
                             <TextBox x:Name="OpenAiEndpointTextBox"
                                      Grid.Column="1"
-                                     Margin="0,0,0,10" />
+                                     Margin="0,0,0,10"
+                                     ToolTip="可填写 https://example.com/v1，应用会自动补全 /chat/completions" />
                             <TextBlock Grid.Row="1"
+                                       VerticalAlignment="Center"
+                                       Text="API Key" />
+                            <PasswordBox x:Name="OpenAiApiKeyPasswordBox"
+                                         Grid.Row="1"
+                                         Grid.Column="1"
+                                         Margin="0,0,0,10" />
+                            <TextBlock Grid.Row="2"
                                        VerticalAlignment="Center"
                                        Text="模型" />
                             <TextBox x:Name="OpenAiModelTextBox"
-                                     Grid.Row="1"
+                                     Grid.Row="2"
                                      Grid.Column="1"
                                      Margin="0,0,0,10" />
-                            <TextBlock Grid.Row="2"
+                            <TextBlock Grid.Row="3"
                                        Grid.Column="1"
                                        Foreground="{StaticResource MutedBrush}"
                                        TextWrapping="Wrap"
-                                       Text="API Key 从环境变量 SNAPTRANSLATE_API_KEY 读取，不会写入配置文件。" />
+                                       Text="支持填写 /v1 基础地址或完整 Chat Completions 地址。API Key 使用 Windows 当前用户加密后保存在本机。" />
+                            <StackPanel Grid.Row="4"
+                                        Grid.Column="1"
+                                        Margin="0,12,0,0"
+                                        Orientation="Horizontal">
+                                <Button x:Name="TestOpenAiButton"
+                                        Click="TestOpenAiButton_Click"
+                                        Content="测试连接" />
+                                <TextBlock x:Name="OpenAiConnectionStatusText"
+                                           MaxWidth="360"
+                                           VerticalAlignment="Center"
+                                           Foreground="{StaticResource MutedBrush}"
+                                           TextWrapping="Wrap" />
+                            </StackPanel>
                         </Grid>
                     </StackPanel>
                 </Grid>

@@ -11,7 +11,7 @@
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <AssemblyName>SnapTranslate</AssemblyName>
     <RootNamespace>SnapTranslate</RootNamespace>
-    <Version>0.2.0</Version>
+    <Version>0.2.1</Version>
     <Authors>SnapTranslate contributors</Authors>
     <Description>Fast Windows screenshot annotation, OCR, text copy and translation.</Description>
     <PublishSingleFile>true</PublishSingleFile>

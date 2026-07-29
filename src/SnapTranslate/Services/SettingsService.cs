@@ -22,10 +22,14 @@ public sealed class SettingsService
         {
             if (File.Exists(SettingsPath))
             {
-                return JsonSerializer.Deserialize<AppSettings>(
-                           File.ReadAllText(SettingsPath),
-                           JsonOptions)
-                       ?? new AppSettings();
+                AppSettings settings =
+                    JsonSerializer.Deserialize<AppSettings>(
+                        File.ReadAllText(SettingsPath),
+                        JsonOptions)
+                    ?? new AppSettings();
+                settings.OpenAiApiKey =
+                    ApiKeyProtector.Unprotect(settings.OpenAiApiKeyProtected);
+                return settings;
             }
         }
         catch
@@ -38,6 +42,9 @@ public sealed class SettingsService
 
     public void Save(AppSettings settings)
     {
+        settings.OpenAiApiKeyProtected =
+            ApiKeyProtector.Protect(settings.OpenAiApiKey);
+
         string? directory = Path.GetDirectoryName(SettingsPath);
         if (!string.IsNullOrWhiteSpace(directory))
         {

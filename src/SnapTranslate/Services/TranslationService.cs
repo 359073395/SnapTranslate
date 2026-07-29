@@ -76,6 +76,10 @@ public sealed class TranslationService
         return fallbackTranslations;
     }
 
+    public Task<string> TestOpenAiConnectionAsync(
+        CancellationToken cancellationToken = default) =>
+        TranslateWithOpenAiAsync("Hello", cancellationToken);
+
     private async Task<string> TranslateWithGoogleWebAsync(
         string text,
         CancellationToken cancellationToken)
@@ -116,27 +120,28 @@ public sealed class TranslationService
         string text,
         CancellationToken cancellationToken)
     {
-        string? apiKey = Environment.GetEnvironmentVariable("SNAPTRANSLATE_API_KEY");
+        string? apiKey = _settings.OpenAiApiKey;
+        if (string.IsNullOrWhiteSpace(apiKey))
+        {
+            apiKey = Environment.GetEnvironmentVariable("SNAPTRANSLATE_API_KEY");
+        }
+
         if (string.IsNullOrWhiteSpace(apiKey))
         {
             throw new InvalidOperationException(
-                "请先设置环境变量 SNAPTRANSLATE_API_KEY，再使用 OpenAI 兼容接口。");
+                "请填写 API Key，再使用 OpenAI 兼容接口。");
         }
 
-        if (!Uri.TryCreate(_settings.OpenAiEndpoint, UriKind.Absolute, out Uri? endpoint))
-        {
-            throw new InvalidOperationException("OpenAI 兼容接口地址无效。");
-        }
+        Uri endpoint = ResolveOpenAiEndpoint(_settings.OpenAiEndpoint);
 
         string model = string.IsNullOrWhiteSpace(_settings.OpenAiModel)
             ? "gpt-4.1-mini"
             : _settings.OpenAiModel;
 
-        string payload = JsonSerializer.Serialize(new
+        Dictionary<string, object> payloadValues = new()
         {
-            model,
-            temperature = 0.1,
-            messages = new object[]
+            ["model"] = model,
+            ["messages"] = new object[]
             {
                 new
                 {
@@ -149,7 +154,18 @@ public sealed class TranslationService
                     content = text
                 }
             }
-        });
+        };
+
+        if (model.StartsWith("gpt-5", StringComparison.OrdinalIgnoreCase))
+        {
+            payloadValues["reasoning_effort"] = "none";
+        }
+        else
+        {
+            payloadValues["temperature"] = 0.1;
+        }
+
+        string payload = JsonSerializer.Serialize(payloadValues);
 
         using HttpRequestMessage request = new(HttpMethod.Post, endpoint);
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
@@ -157,7 +173,11 @@ public sealed class TranslationService
 
         using HttpResponseMessage response = await Http.SendAsync(request, cancellationToken);
         string json = await response.Content.ReadAsStringAsync(cancellationToken);
-        response.EnsureSuccessStatusCode();
+        if (!response.IsSuccessStatusCode)
+        {
+            throw new InvalidOperationException(
+                $"OpenAI 兼容接口请求失败（HTTP {(int)response.StatusCode}）：{ExtractErrorMessage(json)}");
+        }
 
         using JsonDocument document = JsonDocument.Parse(json);
         JsonElement root = document.RootElement;
@@ -166,7 +186,7 @@ public sealed class TranslationService
             choices[0].TryGetProperty("message", out JsonElement message) &&
             message.TryGetProperty("content", out JsonElement content))
         {
-            string result = content.GetString()?.Trim() ?? string.Empty;
+            string result = ExtractMessageContent(content);
             if (result.Length > 0)
             {
                 return result;
@@ -174,6 +194,98 @@ public sealed class TranslationService
         }
 
         throw new InvalidOperationException("OpenAI 兼容接口返回格式无法识别。");
+    }
+
+    public static Uri ResolveOpenAiEndpoint(string value)
+    {
+        if (!Uri.TryCreate(value?.Trim(), UriKind.Absolute, out Uri? endpoint) ||
+            (endpoint.Scheme != Uri.UriSchemeHttps &&
+             endpoint.Scheme != Uri.UriSchemeHttp))
+        {
+            throw new InvalidOperationException("OpenAI 兼容接口地址无效。");
+        }
+
+        UriBuilder builder = new(endpoint);
+        string path = builder.Path.TrimEnd('/');
+
+        if (path.EndsWith("/chat/completions", StringComparison.OrdinalIgnoreCase))
+        {
+            return builder.Uri;
+        }
+
+        builder.Path = path.Length == 0
+            ? "/v1/chat/completions"
+            : $"{path}/chat/completions";
+        return builder.Uri;
+    }
+
+    private static string ExtractMessageContent(JsonElement content)
+    {
+        if (content.ValueKind == JsonValueKind.String)
+        {
+            return content.GetString()?.Trim() ?? string.Empty;
+        }
+
+        if (content.ValueKind != JsonValueKind.Array)
+        {
+            return string.Empty;
+        }
+
+        StringBuilder result = new();
+        foreach (JsonElement part in content.EnumerateArray())
+        {
+            if (part.ValueKind == JsonValueKind.Object &&
+                part.TryGetProperty("text", out JsonElement text) &&
+                text.ValueKind == JsonValueKind.String)
+            {
+                result.Append(text.GetString());
+            }
+        }
+
+        return result.ToString().Trim();
+    }
+
+    private static string ExtractErrorMessage(string json)
+    {
+        try
+        {
+            using JsonDocument document = JsonDocument.Parse(json);
+            JsonElement root = document.RootElement;
+            if (root.TryGetProperty("error", out JsonElement error))
+            {
+                if (error.ValueKind == JsonValueKind.Object &&
+                    error.TryGetProperty("message", out JsonElement nestedMessage) &&
+                    nestedMessage.ValueKind == JsonValueKind.String)
+                {
+                    return LimitErrorLength(nestedMessage.GetString());
+                }
+
+                if (error.ValueKind == JsonValueKind.String)
+                {
+                    return LimitErrorLength(error.GetString());
+                }
+            }
+
+            if (root.TryGetProperty("message", out JsonElement message) &&
+                message.ValueKind == JsonValueKind.String)
+            {
+                return LimitErrorLength(message.GetString());
+            }
+        }
+        catch (JsonException)
+        {
+            // Fall back to a shortened response body below.
+        }
+
+        return LimitErrorLength(json);
+    }
+
+    private static string LimitErrorLength(string? message)
+    {
+        string value = string.IsNullOrWhiteSpace(message)
+            ? "服务未返回错误详情。"
+            : message.Trim();
+        return value.Length <= 500 ? value : $"{value[..500]}…";
     }
 
     private string GetOpenAiTranslationInstruction()
