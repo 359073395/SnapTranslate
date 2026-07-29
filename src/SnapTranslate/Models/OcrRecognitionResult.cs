@@ -7,7 +7,9 @@ public sealed record OcrTextLine(
     double Width,
     double Height);
 
-public sealed record OcrRecognitionResult(IReadOnlyList<OcrTextLine> Lines)
+public sealed record OcrRecognitionResult(
+    IReadOnlyList<OcrTextLine> Lines,
+    string RecognizerLanguageTag = "")
 {
     public static OcrRecognitionResult Empty { get; } = new([]);
 

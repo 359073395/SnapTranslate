@@ -345,8 +345,18 @@ public partial class EditorWindow : Window
             }
 
             ShowResults();
+            string recognizerDescription =
+                OcrService.GetRecognizerDescription(
+                    recognition.RecognizerLanguageTag);
+            string recognitionMode =
+                string.Equals(
+                    _settings.OcrLanguage,
+                    OcrService.AutoLanguageTag,
+                    StringComparison.OrdinalIgnoreCase)
+                    ? $"自动识别：{recognizerDescription}"
+                    : recognizerDescription;
             StatusText.Text = recognition.Lines.Count > 0
-                ? $"文字识别完成，共 {recognition.Lines.Count} 行。"
+                ? $"文字识别完成（{recognitionMode}），共 {recognition.Lines.Count} 行。"
                 : "没有识别到文字。";
             return recognition;
         }
