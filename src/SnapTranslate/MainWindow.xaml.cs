@@ -69,7 +69,8 @@ public partial class MainWindow : Window
 
     private void ReadSettingsFromControls()
     {
-        _settings.OcrLanguage = OcrLanguageComboBox.SelectedValue?.ToString() ?? "en";
+        _settings.OcrLanguage =
+            OcrLanguageComboBox.SelectedValue?.ToString() ?? OcrService.AutoLanguageTag;
         _settings.TargetLanguage = TargetLanguageComboBox.SelectedValue?.ToString() ?? "zh-CN";
         _settings.TranslationProvider =
             (TranslationProviderComboBox.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? "GoogleWeb";

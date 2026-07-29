@@ -4,7 +4,7 @@ namespace SnapTranslate.Models;
 
 public sealed class AppSettings
 {
-    public string OcrLanguage { get; set; } = "zh-Hans";
+    public string OcrLanguage { get; set; } = "auto";
     public string TargetLanguage { get; set; } = "zh-CN";
     public string TranslationProvider { get; set; } = "GoogleWeb";
     public string OpenAiEndpoint { get; set; } = "https://api.openai.com/v1";
