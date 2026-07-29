@@ -1,5 +1,6 @@
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.IO;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Interop;
@@ -71,6 +72,17 @@ public static class ScreenCaptureService
         {
             DeleteObject(hBitmap);
         }
+    }
+
+    public static Bitmap ToBitmap(BitmapSource source)
+    {
+        BmpBitmapEncoder encoder = new();
+        encoder.Frames.Add(BitmapFrame.Create(source));
+        using MemoryStream stream = new();
+        encoder.Save(stream);
+        stream.Position = 0;
+        using Bitmap decoded = new(stream);
+        return new Bitmap(decoded);
     }
 
     [DllImport("gdi32.dll")]

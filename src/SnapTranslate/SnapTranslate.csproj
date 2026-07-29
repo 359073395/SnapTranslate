@@ -11,11 +11,14 @@
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <AssemblyName>SnapTranslate</AssemblyName>
     <RootNamespace>SnapTranslate</RootNamespace>
-    <Version>0.2.2</Version>
+    <Version>0.2.3</Version>
     <Authors>SnapTranslate contributors</Authors>
     <Description>Fast Windows screenshot annotation, OCR, text copy and translation.</Description>
     <PublishSingleFile>true</PublishSingleFile>
     <SelfContained>true</SelfContained>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
   </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="MahApps.Metro.IconPacks.Material" Version="6.2.1" />
+  </ItemGroup>
 </Project>

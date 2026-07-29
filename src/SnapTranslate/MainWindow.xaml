@@ -196,14 +196,28 @@
             </Border>
 
             <Grid Grid.Row="3" Margin="0,20,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
                 <Button Width="112"
                         HorizontalAlignment="Left"
                         Click="SaveSettingsButton_Click"
                         Content="保存设置" />
                 <TextBlock x:Name="SettingsStatusText"
-                           Margin="128,0,0,0"
+                           Grid.Column="1"
+                           Margin="16,0"
                            VerticalAlignment="Center"
-                           Foreground="{StaticResource MutedBrush}" />
+                           Foreground="{StaticResource MutedBrush}"
+                           TextTrimming="CharacterEllipsis" />
+                <Button Grid.Column="2"
+                        Width="96"
+                        Margin="8,0,0,0"
+                        Background="#394150"
+                        Click="ExitApplicationButton_Click"
+                        Content="退出程序"
+                        ToolTip="完全退出 SnapTranslate；右上角关闭按钮只会最小化窗口。" />
             </Grid>
         </Grid>
     </ScrollViewer>
