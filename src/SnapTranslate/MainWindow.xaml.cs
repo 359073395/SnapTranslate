@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -6,8 +7,14 @@ using SnapTranslate.Models;
 using SnapTranslate.Services;
 using SnapTranslate.Views;
 using Brushes = System.Windows.Media.Brushes;
+using ContextMenuStrip = System.Windows.Forms.ContextMenuStrip;
+using DrawingIcon = System.Drawing.Icon;
 using KeyEventArgs = System.Windows.Input.KeyEventArgs;
 using MessageBox = System.Windows.MessageBox;
+using NotifyIcon = System.Windows.Forms.NotifyIcon;
+using ToolStripMenuItem = System.Windows.Forms.ToolStripMenuItem;
+using ToolStripSeparator = System.Windows.Forms.ToolStripSeparator;
+using ToolTipIcon = System.Windows.Forms.ToolTipIcon;
 
 namespace SnapTranslate;
 
@@ -15,6 +22,9 @@ public partial class MainWindow : Window
 {
     private readonly SettingsService _settingsService = new();
     private readonly GlobalHotkeyService _hotkeyService = new();
+    private readonly StartupService _startupService = new();
+    private readonly bool _startHidden;
+    private readonly NotifyIcon _notifyIcon;
     private AppSettings _settings = new();
     private Key _pendingHotkeyKey = Key.A;
     private ModifierKeys _pendingHotkeyModifiers = ModifierKeys.Control | ModifierKeys.Shift;
@@ -22,10 +32,21 @@ public partial class MainWindow : Window
     private bool _exitRequested;
     private bool _initialized;
     private bool _recordingHotkey;
+    private bool _restoreMainWindowAfterCapture;
+    private bool _trayHintShown;
 
-    public MainWindow()
+    public MainWindow(bool startHidden = false)
     {
+        _startHidden = startHidden;
         InitializeComponent();
+        _notifyIcon = CreateTrayIcon();
+
+        if (startHidden)
+        {
+            ShowActivated = false;
+            ShowInTaskbar = false;
+            WindowState = WindowState.Minimized;
+        }
 
         Loaded += MainWindow_Loaded;
         Closing += MainWindow_Closing;
@@ -51,6 +72,57 @@ public partial class MainWindow : Window
                               _pendingHotkeyKey,
                               _pendingHotkeyModifiers);
         UpdateHotkeyStatus(registered);
+
+        if (!_startupService.TrySetEnabled(
+                _settings.StartWithWindows,
+                out string? startupError))
+        {
+            StartupStatusText.Text = $"开机启动设置失败：{startupError}";
+            StartupStatusText.Foreground = Brushes.Orange;
+        }
+        else
+        {
+            UpdateStartupStatus();
+        }
+
+        if (_startHidden)
+        {
+            Dispatcher.BeginInvoke(() => HideToTray(showHint: false));
+        }
+    }
+
+    private NotifyIcon CreateTrayIcon()
+    {
+        ContextMenuStrip menu = new();
+        ToolStripMenuItem showItem = new("显示灵犀截图");
+        showItem.Click += (_, _) => Dispatcher.InvokeAsync(ShowFromTray);
+        ToolStripMenuItem captureItem = new("开始截图");
+        captureItem.Click += (_, _) => Dispatcher.InvokeAsync(BeginCaptureAsync);
+        ToolStripMenuItem exitItem = new("退出灵犀截图");
+        exitItem.Click += (_, _) => Dispatcher.InvokeAsync(ExitApplication);
+        menu.Items.Add(showItem);
+        menu.Items.Add(captureItem);
+        menu.Items.Add(new ToolStripSeparator());
+        menu.Items.Add(exitItem);
+
+        NotifyIcon notifyIcon = new()
+        {
+            Text = "灵犀截图",
+            Visible = true,
+            ContextMenuStrip = menu
+        };
+        string executablePath = Environment.ProcessPath
+            ?? Path.Combine(AppContext.BaseDirectory, "LingxiCapture.exe");
+        DrawingIcon? applicationIcon =
+            DrawingIcon.ExtractAssociatedIcon(executablePath);
+        if (applicationIcon is not null)
+        {
+            notifyIcon.Icon = (DrawingIcon)applicationIcon.Clone();
+            applicationIcon.Dispose();
+        }
+
+        notifyIcon.DoubleClick += (_, _) => Dispatcher.InvokeAsync(ShowFromTray);
+        return notifyIcon;
     }
 
     private void LoadLanguageOptions()
@@ -85,6 +157,7 @@ public partial class MainWindow : Window
         OpenAiEndpointTextBox.Text = _settings.OpenAiEndpoint;
         OpenAiModelTextBox.Text = _settings.OpenAiModel;
         OpenAiApiKeyPasswordBox.Password = _settings.OpenAiApiKey;
+        StartWithWindowsCheckBox.IsChecked = _settings.StartWithWindows;
         LoadHotkeyFromSettings();
         UpdateProviderPanel();
     }
@@ -107,6 +180,7 @@ public partial class MainWindow : Window
         _settings.HotkeyShift = _pendingHotkeyModifiers.HasFlag(ModifierKeys.Shift);
         _settings.HotkeyAlt = _pendingHotkeyModifiers.HasFlag(ModifierKeys.Alt);
         _settings.HotkeyWindows = _pendingHotkeyModifiers.HasFlag(ModifierKeys.Windows);
+        _settings.StartWithWindows = StartWithWindowsCheckBox.IsChecked == true;
     }
 
     private async void CaptureButton_Click(object sender, RoutedEventArgs e)
@@ -122,7 +196,10 @@ public partial class MainWindow : Window
         }
 
         _captureInProgress = true;
+        _restoreMainWindowAfterCapture =
+            IsVisible && WindowState != WindowState.Minimized && ShowInTaskbar;
         ReadSettingsFromControls();
+        ShowInTaskbar = false;
         Hide();
         await Task.Delay(180);
 
@@ -156,16 +233,29 @@ public partial class MainWindow : Window
     private void RestoreMainWindow()
     {
         _captureInProgress = false;
-        Show();
-        WindowState = WindowState.Normal;
-        Activate();
+        if (_restoreMainWindowAfterCapture)
+        {
+            ShowFromTray();
+        }
+        else
+        {
+            HideToTray(showHint: false);
+        }
     }
 
     private void SaveSettingsButton_Click(object sender, RoutedEventArgs e)
     {
         ReadSettingsFromControls();
         _settingsService.Save(_settings);
-        SettingsStatusText.Text = $"已保存到 {_settingsService.SettingsPath}";
+        bool startupUpdated = _startupService.TrySetEnabled(
+            _settings.StartWithWindows,
+            out string? startupError);
+        SettingsStatusText.Text = startupUpdated
+            ? $"已保存到 {_settingsService.SettingsPath}"
+            : $"设置已保存，但开机启动更新失败：{startupError}";
+        SettingsStatusText.Foreground =
+            startupUpdated ? Brushes.LightGreen : Brushes.Orange;
+        UpdateStartupStatus(startupError);
         UpdateHotkeyStatus(
             _hotkeyService.TryRegister(
                 _pendingHotkeyKey,
@@ -386,8 +476,71 @@ public partial class MainWindow : Window
 
     private void ExitApplicationButton_Click(object sender, RoutedEventArgs e)
     {
+        ExitApplication();
+    }
+
+    public void ShowFromTray()
+    {
+        if (_exitRequested)
+        {
+            return;
+        }
+
+        ShowInTaskbar = true;
+        Show();
+        WindowState = WindowState.Normal;
+        ShowActivated = true;
+        Activate();
+        Topmost = true;
+        Topmost = false;
+        Focus();
+    }
+
+    private void HideToTray(bool showHint = true)
+    {
+        if (_exitRequested)
+        {
+            return;
+        }
+
+        WindowState = WindowState.Normal;
+        ShowInTaskbar = false;
+        Hide();
+
+        if (showHint && !_trayHintShown)
+        {
+            _trayHintShown = true;
+            _notifyIcon.ShowBalloonTip(
+                2200,
+                "灵犀截图",
+                "已隐藏到系统托盘，截图快捷键继续可用。",
+                ToolTipIcon.Info);
+        }
+    }
+
+    private void ExitApplication()
+    {
         _exitRequested = true;
+        _notifyIcon.Visible = false;
         Close();
+        System.Windows.Application.Current.Shutdown();
+    }
+
+    private void UpdateStartupStatus(string? error = null)
+    {
+        if (!string.IsNullOrWhiteSpace(error))
+        {
+            StartupStatusText.Text = $"开机启动设置失败：{error}";
+            StartupStatusText.Foreground = Brushes.Orange;
+            return;
+        }
+
+        bool enabled = _startupService.IsEnabled();
+        StartupStatusText.Text = enabled
+            ? "已设置为登录 Windows 后自动在托盘运行。"
+            : "开机自动启动已关闭。";
+        StartupStatusText.Foreground =
+            enabled ? Brushes.LightGreen : Brushes.LightGray;
     }
 
     private void UpdateProviderPanel()
@@ -406,6 +559,9 @@ public partial class MainWindow : Window
 
     private void MainWindow_Closed(object? sender, EventArgs e)
     {
+        _notifyIcon.Visible = false;
+        _notifyIcon.ContextMenuStrip?.Dispose();
+        _notifyIcon.Dispose();
         _hotkeyService.Dispose();
     }
 
@@ -417,6 +573,6 @@ public partial class MainWindow : Window
         }
 
         e.Cancel = true;
-        WindowState = WindowState.Minimized;
+        HideToTray();
     }
 }

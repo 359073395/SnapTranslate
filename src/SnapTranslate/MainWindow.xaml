@@ -1,14 +1,16 @@
 <Window x:Class="SnapTranslate.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="SnapTranslate"
-        Height="720"
+        Title="灵犀截图"
+        Icon="Assets/lingxi-icon.ico"
+        Height="820"
         Width="760"
-        MinHeight="600"
+        MinHeight="680"
         MinWidth="680"
         WindowStartupLocation="CenterScreen"
         Background="{StaticResource SurfaceBrush}"
-        Foreground="White">
+        Foreground="White"
+        FontFamily="Segoe UI, Microsoft YaHei UI">
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <Grid Margin="34">
             <Grid.RowDefinitions>
@@ -16,17 +18,35 @@
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
-            <StackPanel>
-                <TextBlock Text="SnapTranslate"
-                           FontSize="32"
-                           FontWeight="SemiBold" />
-                <TextBlock Margin="0,8,0,0"
-                           Foreground="{StaticResource MutedBrush}"
-                           FontSize="14"
-                           Text="像聊天软件一样快速截图、标注、识别和翻译。" />
-            </StackPanel>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="68" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Image Width="56"
+                       Height="56"
+                       HorizontalAlignment="Left"
+                       VerticalAlignment="Top"
+                       Source="Assets/lingxi-icon.png"
+                       Stretch="Uniform" />
+                <StackPanel Grid.Column="1">
+                    <TextBlock Text="灵犀截图"
+                               FontSize="32"
+                               FontWeight="SemiBold" />
+                    <TextBlock Margin="0,4,0,0"
+                               Foreground="#AFC0FF"
+                               FontSize="13"
+                               FontWeight="SemiBold"
+                               Text="LINGUAL INSIGHT · TRANSLATE WITH INSIGHT" />
+                    <TextBlock Margin="0,7,0,0"
+                               Foreground="{StaticResource MutedBrush}"
+                               FontSize="14"
+                               Text="翻译不止于字面，截图、洞察与表达一步完成。" />
+                </StackPanel>
+            </Grid>
 
             <Border Grid.Row="1"
                     Margin="0,28,0,0"
@@ -195,7 +215,42 @@
                 </Grid>
             </Border>
 
-            <Grid Grid.Row="3" Margin="0,20,0,0">
+            <Border Grid.Row="3"
+                    Margin="0,18,0,0"
+                    Padding="22"
+                    Background="{StaticResource CardBrush}"
+                    CornerRadius="12">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel>
+                        <TextBlock Text="运行设置"
+                                   FontSize="16"
+                                   FontWeight="SemiBold" />
+                        <CheckBox x:Name="StartWithWindowsCheckBox"
+                                  Margin="0,14,0,0"
+                                  Content="开机自动启动灵犀截图" />
+                        <TextBlock Margin="0,8,0,0"
+                                   Foreground="{StaticResource MutedBrush}"
+                                   Text="启动后隐藏在系统托盘；关闭主窗口也不会退出，截图快捷键继续可用。" />
+                        <TextBlock x:Name="StartupStatusText"
+                                   Margin="0,6,0,0"
+                                   Foreground="#6EDC8C" />
+                    </StackPanel>
+                    <Image Grid.Column="1"
+                           Width="46"
+                           Height="46"
+                           Margin="20,0,2,0"
+                           VerticalAlignment="Center"
+                           Opacity="0.92"
+                           Source="Assets/lingxi-icon.png"
+                           Stretch="Uniform" />
+                </Grid>
+            </Border>
+
+            <Grid Grid.Row="4" Margin="0,20,0,0">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
@@ -217,7 +272,7 @@
                         Background="#394150"
                         Click="ExitApplicationButton_Click"
                         Content="退出程序"
-                        ToolTip="完全退出 SnapTranslate；右上角关闭按钮只会最小化窗口。" />
+                        ToolTip="完全退出灵犀截图；右上角关闭按钮会隐藏到系统托盘。" />
             </Grid>
         </Grid>
     </ScrollViewer>

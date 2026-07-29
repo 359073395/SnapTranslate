@@ -878,7 +878,7 @@ public partial class CaptureOverlayWindow : Window
         {
             Title = "保存截图",
             Filter = "PNG 图片|*.png",
-            FileName = $"SnapTranslate-{DateTime.Now:yyyyMMdd-HHmmss}.png",
+            FileName = $"LingxiCapture-{DateTime.Now:yyyyMMdd-HHmmss}.png",
             AddExtension = true,
             DefaultExt = ".png"
         };

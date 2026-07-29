@@ -36,17 +36,28 @@ jobs:
           -r win-x64
           --self-contained true
           --no-restore
-          -o artifacts/publish
+          -o artifacts/publish-v0.3.0
 
-      - name: Package
+      - name: Package portable app
         shell: pwsh
         run: |
-          Copy-Item README.md,CHANGELOG.md,LICENSE,THIRD_PARTY_NOTICES.md -Destination artifacts/publish
-          Compress-Archive -Path artifacts/publish/* -DestinationPath artifacts/SnapTranslate-win-x64.zip
+          Copy-Item README.md,CHANGELOG.md,LICENSE,THIRD_PARTY_NOTICES.md -Destination artifacts/publish-v0.3.0
+          Compress-Archive -Path artifacts/publish-v0.3.0/* -DestinationPath artifacts/LingxiCapture-v0.3.0-win-x64.zip
+
+      - name: Install Inno Setup
+        shell: pwsh
+        run: choco install innosetup --no-progress -y
+
+      - name: Build Windows installer
+        shell: pwsh
+        run: |
+          & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" installer\LingxiCapture.iss
 
       - name: Upload artifact
         uses: actions/upload-artifact@v6
         with:
-          name: SnapTranslate-win-x64
-          path: artifacts/SnapTranslate-win-x64.zip
+          name: LingxiCapture-windows-x64
+          path: |
+            artifacts/LingxiCapture-v0.3.0-win-x64.zip
+            artifacts/installer-v0.3.0/LingxiCapture-Setup-v0.3.0-win-x64.exe
           if-no-files-found: error

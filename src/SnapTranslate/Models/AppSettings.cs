@@ -18,6 +18,7 @@ public sealed class AppSettings
     public bool HotkeyShift { get; set; } = true;
     public bool HotkeyAlt { get; set; }
     public bool HotkeyWindows { get; set; }
+    public bool StartWithWindows { get; set; } = true;
 
     public static IReadOnlyList<LanguageOption> TargetLanguages { get; } =
     [
