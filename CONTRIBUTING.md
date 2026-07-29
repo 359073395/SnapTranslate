@@ -1,6 +1,6 @@
 # Contributing
 
-感谢你帮助改进 SnapTranslate。
+感谢你帮助改进灵犀截图。
 
 ## 开发环境
 

@@ -12,8 +12,8 @@ was adapted and rewritten from `ShareX.Tools/Tools/OCR/OCRHelper.cs` in [ShareX 
 
 ShareX is copyright © ShareX Team and contributors and is distributed under the GNU General Public License version 3.
 
-SnapTranslate is an independent project and is not affiliated with or endorsed by the ShareX project.
+Lingxi Capture is an independent project and is not affiliated with or endorsed by the ShareX project.
 
 ## Platform APIs
 
-SnapTranslate uses Windows APIs supplied by the operating system, including Windows Media OCR, Windows Graphics Imaging, clipboard, global hotkeys, and screen capture APIs.
+Lingxi Capture uses Windows APIs supplied by the operating system, including Windows Media OCR, Windows Graphics Imaging, clipboard, global hotkeys, and screen capture APIs.

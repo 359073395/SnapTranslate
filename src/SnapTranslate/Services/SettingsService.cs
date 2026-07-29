@@ -6,6 +6,11 @@ namespace SnapTranslate.Services;
 
 public sealed class SettingsService
 {
+    private static readonly string LegacySettingsPath = Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+        "SnapTranslate",
+        "settings.json");
+
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
         WriteIndented = true
@@ -13,22 +18,35 @@ public sealed class SettingsService
 
     public string SettingsPath { get; } = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-        "SnapTranslate",
+        "LingxiCapture",
         "settings.json");
 
     public AppSettings Load()
     {
         try
         {
-            if (File.Exists(SettingsPath))
+            string? loadPath = File.Exists(SettingsPath)
+                ? SettingsPath
+                : File.Exists(LegacySettingsPath)
+                    ? LegacySettingsPath
+                    : null;
+            if (loadPath is not null)
             {
                 AppSettings settings =
                     JsonSerializer.Deserialize<AppSettings>(
-                        File.ReadAllText(SettingsPath),
+                        File.ReadAllText(loadPath),
                         JsonOptions)
                     ?? new AppSettings();
                 settings.OpenAiApiKey =
                     ApiKeyProtector.Unprotect(settings.OpenAiApiKeyProtected);
+                if (!string.Equals(
+                        loadPath,
+                        SettingsPath,
+                        StringComparison.OrdinalIgnoreCase))
+                {
+                    Save(settings);
+                }
+
                 return settings;
             }
         }

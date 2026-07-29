@@ -1,13 +1,17 @@
-# SnapTranslate
+# 灵犀截图（Lingxi Capture）
+
+> **灵犀截图——翻译不止于字面。**
 
 一个面向 Windows 的轻量截图翻译工具：像微信截图一样框选屏幕区域，然后标注、识别文字、翻译、复制或保存。
 
-> 当前版本：`v0.2.5`（可用预览版）
+> 当前版本：`v0.3.0`（可用预览版）
 
 ## 功能
 
 - 可自定义全局截图快捷键，默认 `Ctrl + Shift + A`
-- 主窗口右上角关闭按钮会最小化，截图快捷键继续在后台可用；需要完全结束时点击“退出程序”
+- 主窗口右上角关闭按钮会隐藏到系统托盘，任务栏不再保留窗口；托盘菜单可显示主界面、开始截图或退出程序
+- 默认随 Windows 开机启动并在托盘运行，也可在主界面关闭
+- 提供标准 Windows 安装向导，可自行选择安装路径
 - 默认使用贴近选区的日常截图工具栏，不再强制进入完整编辑器
 - 完成按钮、回车或双击选区会复制当前最终画面并结束截图，`Esc` 直接取消
 - 浮动工具栏按微信截图的使用顺序分组：标注 → OCR/翻译 → 撤销/保存/高级编辑 → 取消/完成
@@ -26,7 +30,7 @@
 
 ## 下载和使用
 
-从 GitHub 的 [Releases](../../releases) 下载 `SnapTranslate-v0.2.5-win-x64.zip`，解压后运行 `SnapTranslate.exe`。发布包自带 .NET 运行时，不需要单独安装。
+推荐从 GitHub 的 [Releases](../../releases) 下载 `LingxiCapture-Setup-v0.3.0-win-x64.exe`，安装时可以选择路径。也可以下载便携版 `LingxiCapture-v0.3.0-win-x64.zip`，解压后运行 `LingxiCapture.exe`。两个发布包都自带 .NET 运行时。
 
 系统要求：
 
@@ -47,7 +51,7 @@
 1. 打开 Windows“设置”。
 2. 进入“时间和语言”→“语言和区域”。
 3. 添加对应语言，并安装其 OCR/基本输入组件。
-4. 重启 SnapTranslate。
+4. 重启灵犀截图。
 
 ## 翻译配置
 
@@ -68,8 +72,10 @@
 配置默认保存到：
 
 ```text
-%APPDATA%\SnapTranslate\settings.json
+%APPDATA%\LingxiCapture\settings.json
 ```
+
+从 SnapTranslate 旧版本升级时，灵犀截图会自动迁移原有设置和使用 Windows DPAPI 加密的 API Key。
 
 ## 隐私说明
 
@@ -101,7 +107,7 @@ dotnet publish src\SnapTranslate\SnapTranslate.csproj `
 
 ## 与 ShareX 的关系
 
-SnapTranslate 不是 ShareX 官方产品。项目的 Windows OCR 处理流程参考并改写自 [ShareX 21.0.0](https://github.com/ShareX/ShareX/tree/v21.0.0)，因此采用同样的 GNU GPL v3 许可证。详情见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
+灵犀截图不是 ShareX 官方产品。项目的 Windows OCR 处理流程参考并改写自 [ShareX 21.0.0](https://github.com/ShareX/ShareX/tree/v21.0.0)，因此采用同样的 GNU GPL v3 许可证。详情见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
 
 ## 许可证
 
@@ -111,6 +117,6 @@ SnapTranslate 不是 ShareX 官方产品。项目的 Windows OCR 处理流程参
 
 ## English
 
-SnapTranslate is a lightweight Windows screenshot translator. Press `Ctrl + Shift + A`, select a region, annotate it, run local Windows OCR, translate text, and copy or save the result.
+Lingxi Capture (Lingual Insight) is a lightweight Windows screenshot translator. Press `Ctrl + Shift + A`, select a region, annotate it, run local Windows OCR, translate text, and copy or save the result.
 
-The `v0.2.5` preview adds ellipse, directional arrow, and sampled mosaic annotations to the compact WeChat-style toolbar. All annotation tools support undo, PNG export, clipboard completion, and Advanced Editor handoff. It also keeps automatic Windows OCR engine selection, customizable global hotkeys, position-aware translation overlays, Indonesian/Bahasa Indonesia, and OpenAI-compatible relay settings with Windows-encrypted API key storage. Windows 10 build 19041 or later is required. See the Chinese documentation above for setup details.
+The `v0.3.0` preview introduces the Lingxi Capture brand and LI icon, true system-tray behavior, default Windows startup, settings migration, and an installer with a selectable destination folder. It retains the WeChat-style annotation toolbar, automatic Windows OCR selection, Indonesian/Bahasa Indonesia, position-aware translation overlays, and OpenAI-compatible relay settings with Windows-encrypted API key storage. Windows 10 build 19041 or later is required.
