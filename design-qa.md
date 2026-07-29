@@ -1,60 +1,66 @@
-# SnapTranslate v0.2.3 Design QA
+# SnapTranslate v0.2.4 Design QA
 
 ## Reference and implementation
 
-- Selected reference: `G:\Codex\UserData\.codex\generated_images\019fa791-d06d-7392-8489-525378604f83\call_8KkAPJjh2YgY9sv7u95ndDAv.png`
-- Reference dimensions: 1487 × 1058
+- Source visual truth: `G:\GitHub\SnapTranslate\artifacts\ux-qa-v0.2.4\source-wechat-toolbar.png`
+- Source pixel dimensions: 1048 × 350
 - Implementation: `G:\GitHub\SnapTranslate\src\SnapTranslate\Views\CaptureOverlayWindow.xaml`
-- Quick-toolbar evidence: `G:\GitHub\SnapTranslate\artifacts\ux-qa-v0.2.3\01-quick-toolbar.png`
-- Translation evidence: `G:\GitHub\SnapTranslate\artifacts\ux-qa-v0.2.3\02-translation-popover.png`
-- Advanced-editor evidence: `G:\GitHub\SnapTranslate\artifacts\ux-qa-v0.2.3\03-advanced-editor.png`
-- Full comparison: `G:\GitHub\SnapTranslate\artifacts\ux-qa-v0.2.3\comparison-full.png`
-- Focused toolbar comparison: `G:\GitHub\SnapTranslate\artifacts\ux-qa-v0.2.3\comparison-toolbar.png`
+- Implementation screenshot: `G:\GitHub\SnapTranslate\artifacts\ux-qa-v0.2.4\01-wechat-toolbar.png`
+- Implementation pixel dimensions: 1536 × 864
+- Full-view comparison: `G:\GitHub\SnapTranslate\artifacts\ux-qa-v0.2.4\comparison-full.png`
+- Focused toolbar comparison: `G:\GitHub\SnapTranslate\artifacts\ux-qa-v0.2.4\comparison-toolbar.png`
 
-## Test viewport
+## Viewport and state
 
 - Windows 11 desktop, 1536 × 864 logical viewport
 - Display density: 125% (1920 × 1080 physical display)
-- Tested states: initial selection, OCR result, Indonesian translation result, completion by Enter, completion by double-click, and Advanced Editor handoff
+- State: completed selection with the compact toolbar visible below the selection
+- Density normalization: the focused comparison normalizes both toolbar crops to the same 96 px height while preserving aspect ratio; the full comparison preserves each screenshot's original aspect ratio inside equal-width panels
 
 ## Full-view comparison
 
-The reference and implementation use the same visual hierarchy: a dimmed desktop, a blue dashed selection frame with handles and a size badge, a compact dark toolbar attached to the selection, a blue primary completion action, and a separated Advanced Editor action. The implementation repositions floating UI above or below the selection to avoid viewport clipping.
+Both screens use a dimmed desktop, a visible selection frame with resize handles, and a dark floating toolbar attached below the selection. The implementation preserves SnapTranslate's blue dashed selection frame and size badge while adopting the reference's compact icon-only action row.
 
 ## Focused-region comparison
 
-The focused comparison normalizes the selection-and-toolbar region to equal-size panels. Tool order, icon rhythm, separators, copy/save/cancel grouping, completion emphasis, and the Advanced Editor separation match the selected direction. The copied-content controls appear inside their corresponding source-text and translated-text sections.
+The focused toolbar comparison confirms the same workflow rhythm:
+
+1. drawing and annotation tools
+2. OCR and translation
+3. undo, save, and follow-up editing
+4. red cancel and green completion at the far right
+
+SnapTranslate intentionally exposes only its existing capabilities, so it does not add WeChat-only ellipse, emoji, arrow, mosaic, long-screenshot, pin, or share tools. It keeps “重新选择” at the far left and “高级编辑” before cancel, preserving the previously approved product scope.
 
 ## Fidelity review
 
-- Typography: Segoe UI with compact white labels remains legible at 125% scaling.
-- Spacing and layout: consistent 64–92 px tool widths, 8 px toolbar padding, grouped separators, and safe viewport margins.
-- Colors and tokens: dark navy surface, subtle cool-gray border, white iconography, blue selection/primary action, and red annotation color align with the reference.
-- Image quality and icons: real vector Material icons are used; there are no emoji or raster placeholder icons.
-- Copy and content: “复制图片” stays in the image-action group; “复制原文” and “复制译文” stay beside their corresponding result sections.
-- Accessibility and states: toolbar controls expose automation names and tooltips; selected tools have a blue state; busy, success, and error status feedback are provided.
+- Fonts and typography: the toolbar is icon-only like the source; Segoe UI remains limited to the size badge, hint, results, and tooltips.
+- Spacing and layout rhythm: 52 × 48 px actions, compact separators, 10 × 6 px toolbar padding, 10 px radius, and consistent center alignment match the source's density.
+- Colors and visual tokens: dark near-black surface, cool-gray border, white utility icons, red cancellation, and green completion match the reference hierarchy.
+- Image quality and icons: all actions use real vector Material icons; there are no emoji, handcrafted SVGs, text glyph substitutes, or raster placeholders.
+- Copy and content: the redundant image-copy action is removed. Completion, Enter, and double-click copy the final composited screenshot; source-text and translated-text copy controls remain in their corresponding result sections.
+- Accessibility and states: every icon action exposes an automation name and tooltip; selected tools retain a visible blue background; busy and error states still disable completion-sensitive actions.
 
 ## Interaction verification
 
-- Global shortcut opened the quick-capture overlay.
-- Dragging created and preserved a selection while toolbar actions were used.
-- OCR produced recognized text and exposed “复制原文”.
-- Translation used automatic OCR language detection and produced Indonesian text, on-image overlays, and “复制译文”.
-- Enter copied the final rendered image to the clipboard and closed the overlay.
-- Double-click inside the selection copied the final rendered image to the clipboard and closed the overlay.
-- Advanced Editor opened the existing full editor with the current annotated/translated composite preserved.
+- `Esc` closed the overlay without completing the selection.
+- Green completion closed the overlay and wrote a 775 × 475 image to the clipboard.
+- Enter closed the overlay and wrote a 749 × 437 image to the clipboard.
+- Double-click inside the selection closed the overlay and wrote a 750 × 475 image to the clipboard.
+- Clipboard writes now retry and flush before the overlay closes.
+- OCR, translation, save PNG, undo, and Advanced Editor remain present in the accessibility tree in the intended order.
 
 ## Comparison history
 
-1. Initial behavior check found that the first click of a double-click restarted the selection, preventing completion. The selection hit-test was changed so a click inside the ready selection is preserved; the retest closed the overlay and placed a 749 × 425 image on the clipboard.
-2. Enter completion was tested separately and placed a 937 × 575 image on the clipboard.
-3. OCR, relay-backed Indonesian translation, on-image translation, and Advanced Editor handoff were exercised in the running Windows app.
+1. The previous v0.2.3 toolbar had a separate “复制图片” action, placed undo before OCR/translation, placed Advanced Editor after completion, and used a blue filled completion button. User feedback classified this as a P1 workflow mismatch with the supplied WeChat reference.
+2. The toolbar was reordered into four usage groups, the redundant copy action was removed, Advanced Editor moved before the terminal actions, and cancel/complete changed to red and green icon actions.
+3. Post-fix evidence is recorded in `01-wechat-toolbar.png` and `comparison-toolbar.png`. Real-app checks verified that every completion path writes the final image to the clipboard before closing.
 
 ## Findings
 
 - P0: none
-- P1: none after the double-click fix
+- P1: none after the toolbar-order and completion-semantics fix
 - P2: none
-- P3: the generated reference and real monitor use different aspect ratios and background content; the implementation intentionally changes popover placement when needed to remain visible.
+- P3: SnapTranslate has fewer total toolbar actions than WeChat because unsupported WeChat-only tools were intentionally not introduced in this iteration.
 
 final result: passed
