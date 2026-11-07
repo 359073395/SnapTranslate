@@ -12,18 +12,16 @@
     <ApplicationIcon>Assets\lingxi-icon.ico</ApplicationIcon>
     <AssemblyName>LingxiCapture</AssemblyName>
     <RootNamespace>SnapTranslate</RootNamespace>
-    <Version>0.3.1</Version>
+    <Version>0.3.2</Version>
     <AssemblyTitle>灵犀截图</AssemblyTitle>
     <Product>灵犀截图</Product>
     <Authors>Lingxi Capture contributors</Authors>
     <Description>灵犀截图：Windows 截图、标注、OCR 与洞察式翻译工具。</Description>
     <PublishSingleFile>true</PublishSingleFile>
+    <CopyOutputSymbolsToPublishDirectory>false</CopyOutputSymbolsToPublishDirectory>
     <SelfContained>true</SelfContained>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
   </PropertyGroup>
-  <ItemGroup>
-    <PackageReference Include="MahApps.Metro.IconPacks.Material" Version="6.2.1" />
-  </ItemGroup>
   <ItemGroup>
     <None Remove="Assets\lingxi-icon.ico" />
     <None Remove="Assets\lingxi-icon.png" />

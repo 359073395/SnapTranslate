@@ -29,6 +29,9 @@ jobs:
       - name: Build
         run: dotnet build SnapTranslate.slnx -c Release --no-restore
 
+      - name: WPF smoke tests
+        run: dotnet run --project tests/SnapTranslate.SmokeTests -c Release -- --skip-ocr
+
       - name: Publish self-contained app
         run: >
           dotnet publish src/SnapTranslate/SnapTranslate.csproj
@@ -36,13 +39,13 @@ jobs:
           -r win-x64
           --self-contained true
           --no-restore
-          -o artifacts/publish-v0.3.1
+          -o artifacts/publish-v0.3.2
 
       - name: Package portable app
         shell: pwsh
         run: |
-          Copy-Item README.md,CHANGELOG.md,LICENSE,THIRD_PARTY_NOTICES.md -Destination artifacts/publish-v0.3.1
-          Compress-Archive -Path artifacts/publish-v0.3.1/* -DestinationPath artifacts/LingxiCapture-v0.3.1-win-x64.zip
+          Copy-Item README.md,CHANGELOG.md,LICENSE,LICENSE.material-icons.txt,THIRD_PARTY_NOTICES.md -Destination artifacts/publish-v0.3.2
+          Compress-Archive -Path artifacts/publish-v0.3.2/* -DestinationPath artifacts/LingxiCapture-v0.3.2-win-x64.zip
 
       - name: Install Inno Setup
         shell: pwsh
@@ -58,6 +61,6 @@ jobs:
         with:
           name: LingxiCapture-windows-x64
           path: |
-            artifacts/LingxiCapture-v0.3.1-win-x64.zip
-            artifacts/installer-v0.3.1/LingxiCapture-Setup-v0.3.1-win-x64.exe
+            artifacts/LingxiCapture-v0.3.2-win-x64.zip
+            artifacts/installer-v0.3.2/LingxiCapture-Setup-v0.3.2-win-x64.exe
           if-no-files-found: error

@@ -10,7 +10,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using System.Windows.Threading;
-using MahApps.Metro.IconPacks;
+using SnapTranslate.Controls;
 using Microsoft.Win32;
 using SnapTranslate.Models;
 using SnapTranslate.Services;
@@ -223,7 +223,7 @@ public partial class CaptureOverlayWindow : Window
             _activeMosaicCells = null;
             _lastMosaicPoint = null;
             ReleaseMouseCapture();
-            ShowStatus("标注已添加", PackIconMaterialKind.CheckCircleOutline);
+            ShowStatus("标注已添加", ToolbarIconKind.CheckCircleOutline);
             e.Handled = true;
         }
     }
@@ -533,13 +533,13 @@ public partial class CaptureOverlayWindow : Window
         Canvas.SetTop(container, point.Y);
         AnnotationCanvas.Children.Add(container);
         _annotations.Add(container);
-        ShowStatus("文字已添加", PackIconMaterialKind.CheckCircleOutline);
+        ShowStatus("文字已添加", ToolbarIconKind.CheckCircleOutline);
     }
 
     private void SelectionToolButton_Click(object sender, RoutedEventArgs e)
     {
         SetTool(ToolMode.Selection, SelectionToolButton);
-        ShowStatus("拖动鼠标可重新选择区域", PackIconMaterialKind.SelectionDrag);
+        ShowStatus("拖动鼠标可重新选择区域", ToolbarIconKind.SelectionDrag);
     }
 
     private void RectangleToolButton_Click(object sender, RoutedEventArgs e) =>
@@ -625,7 +625,7 @@ public partial class CaptureOverlayWindow : Window
     {
         _drawingBrush = new SolidColorBrush(color);
         ToolOptionsPanel.Visibility = Visibility.Collapsed;
-        ShowStatus($"标注颜色：{name}", PackIconMaterialKind.PaletteOutline);
+        ShowStatus($"标注颜色：{name}", ToolbarIconKind.PaletteOutline);
     }
 
     private void ThinButton_Click(object sender, RoutedEventArgs e) =>
@@ -644,21 +644,21 @@ public partial class CaptureOverlayWindow : Window
     {
         _drawingThickness = thickness;
         ToolOptionsPanel.Visibility = Visibility.Collapsed;
-        ShowStatus($"线条粗细：{thickness:0} px", PackIconMaterialKind.FormatLineWeight);
+        ShowStatus($"线条粗细：{thickness:0} px", ToolbarIconKind.FormatLineWeight);
     }
 
     private void UndoButton_Click(object sender, RoutedEventArgs e)
     {
         if (_annotations.Count == 0)
         {
-            ShowStatus("没有可撤销的标注", PackIconMaterialKind.InformationOutline);
+            ShowStatus("没有可撤销的标注", ToolbarIconKind.InformationOutline);
             return;
         }
 
         UIElement last = _annotations[^1];
         _annotations.RemoveAt(_annotations.Count - 1);
         AnnotationCanvas.Children.Remove(last);
-        ShowStatus("已撤销上一条标注", PackIconMaterialKind.Undo);
+        ShowStatus("已撤销上一条标注", ToolbarIconKind.Undo);
     }
 
     private async void OcrButton_Click(object sender, RoutedEventArgs e)
@@ -703,7 +703,7 @@ public partial class CaptureOverlayWindow : Window
             PositionFloatingUi();
             ShowStatus(
                 $"已翻译为{targetLanguage}（OCR {ocrElapsed.TotalSeconds:0.0}s，翻译 {translationElapsed.TotalSeconds:0.0}s）",
-                PackIconMaterialKind.Translate);
+                ToolbarIconKind.Translate);
         }
         catch (Exception exception)
         {
@@ -757,8 +757,8 @@ public partial class CaptureOverlayWindow : Window
                     ? $"识别完成（{description}），共 {recognition.Lines.Count} 行"
                     : "没有识别到文字",
                 recognition.Lines.Count > 0
-                    ? PackIconMaterialKind.TextRecognition
-                    : PackIconMaterialKind.InformationOutline);
+                    ? ToolbarIconKind.TextRecognition
+                    : ToolbarIconKind.InformationOutline);
             return recognition;
         }
         finally
@@ -870,12 +870,12 @@ public partial class CaptureOverlayWindow : Window
     {
         if (string.IsNullOrWhiteSpace(text))
         {
-            ShowStatus("没有可复制的文字", PackIconMaterialKind.InformationOutline);
+            ShowStatus("没有可复制的文字", ToolbarIconKind.InformationOutline);
             return;
         }
 
         Clipboard.SetText(text);
-        ShowStatus(successMessage, PackIconMaterialKind.ContentCopy);
+        ShowStatus(successMessage, ToolbarIconKind.ContentCopy);
     }
 
     private void SaveImageButton_Click(object sender, RoutedEventArgs e)
@@ -899,7 +899,7 @@ public partial class CaptureOverlayWindow : Window
         encoder.Frames.Add(BitmapFrame.Create(result));
         using FileStream stream = File.Create(dialog.FileName);
         encoder.Save(stream);
-        ShowStatus("PNG 已保存", PackIconMaterialKind.ContentSaveOutline);
+        ShowStatus("PNG 已保存", ToolbarIconKind.ContentSaveOutline);
     }
 
     private void CompleteButton_Click(object sender, RoutedEventArgs e) =>
@@ -996,14 +996,14 @@ public partial class CaptureOverlayWindow : Window
         AdvancedEditorButton.IsEnabled = !busy;
         if (!string.IsNullOrWhiteSpace(message))
         {
-            ShowStatus(message, PackIconMaterialKind.ProgressClock);
+            ShowStatus(message, ToolbarIconKind.ProgressClock);
         }
     }
 
     private void ShowWorkError(Exception exception)
     {
         SetBusy(false);
-        ShowStatus(exception.Message, PackIconMaterialKind.AlertCircleOutline);
+        ShowStatus(exception.Message, ToolbarIconKind.AlertCircleOutline);
         MessageBox.Show(
             this,
             exception.Message,
@@ -1022,12 +1022,12 @@ public partial class CaptureOverlayWindow : Window
             ?.Name
         ?? _settings.TargetLanguage;
 
-    private void ShowStatus(string text, PackIconMaterialKind icon)
+    private void ShowStatus(string text, ToolbarIconKind icon)
     {
         StatusText.Text = text;
         StatusIcon.Kind = icon;
         StatusIcon.Foreground =
-            icon == PackIconMaterialKind.AlertCircleOutline
+            icon == ToolbarIconKind.AlertCircleOutline
                 ? Brushes.Orange
                 : new SolidColorBrush(MediaColor.FromRgb(114, 213, 132));
         StatusToast.Visibility = Visibility.Visible;

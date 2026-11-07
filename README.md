@@ -4,7 +4,7 @@
 
 一个面向 Windows 的轻量截图翻译工具：像微信截图一样框选屏幕区域，然后标注、识别文字、翻译、复制或保存。
 
-> 当前版本：`v0.3.1`（可用预览版）
+> 当前版本：`v0.3.2`（可用预览版）
 
 ## 功能
 
@@ -32,7 +32,11 @@
 
 ## 下载和使用
 
-推荐从 GitHub 的 [Releases](../../releases) 下载 `LingxiCapture-Setup-v0.3.1-win-x64.exe`，安装时可以选择路径。也可以下载便携版 `LingxiCapture-v0.3.1-win-x64.zip`，解压后运行 `LingxiCapture.exe`。两个发布包都自带 .NET 运行时。
+推荐从 GitHub 的 [Releases](../../releases) 下载最新安装包，安装时可以选择路径。也可以下载便携版，解压后运行 `LingxiCapture.exe`。两个发布包都自带 .NET 运行时。
+
+安装程序默认勾选“节省磁盘空间”，使用 Windows 自带的可执行文件透明压缩，仅处理本应用的 EXE/DLL，不删运行组件、不压缩个人设置。在非 NTFS 或不支持的磁盘上会跳过，不影响使用。资源管理器中的“大小”仍显示解压后的逻辑大小，请看“占用空间”判断实际磁盘占用。便携 ZIP 解压后不自动启用磁盘压缩。
+
+如果窗口标题仍是 `SnapTranslate`，说明打开的是旧版便携程序。先从旧版菜单退出，再从开始菜单打开“灵犀截图”；新版标题带版本号。不要同时运行新旧两版，以免快捷键互相占用。
 
 系统要求：
 
@@ -102,7 +106,7 @@ dotnet publish src\SnapTranslate\SnapTranslate.csproj `
 - 首版只截取鼠标所在显示器，暂不支持跨屏框选。
 - 图片译文使用深色半透明文字卡覆盖原文，不包含生成式图片修复或背景重绘。
 - 自动 OCR 只能在 Windows 已安装的识别引擎之间选择，未安装对应文字语言包时准确率会受限。
-- 尚未提供自动更新、窗口吸附和托盘常驻。
+- 尚未提供自动更新和窗口吸附。
 - Google Web 翻译是实验性功能，稳定性不作保证。
 
 欢迎通过 Issue 提交问题和功能建议。
@@ -121,4 +125,4 @@ dotnet publish src\SnapTranslate\SnapTranslate.csproj `
 
 Lingxi Capture (Lingual Insight) is a lightweight Windows screenshot translator. Press `Ctrl + Shift + A`, select a region, annotate it, run local Windows OCR, translate text, and copy or save the result.
 
-The `v0.3.1` preview speeds up translation with structured single-request batches, in-session result caching, lower-output OpenAI-compatible requests, one-time image decoding for automatic OCR, and fast reuse of the last successful OCR language. It retains the Lingxi Capture brand, WeChat-style annotation toolbar, Indonesian/Bahasa Indonesia, position-aware translation overlays, system-tray behavior, default Windows startup, and a selectable-path installer. Windows 10 build 19041 or later is required.
+The `v0.3.2` preview replaces the full icon-pack dependency with the 22 vector icons actually used, identifies the running version in the title bar, and unifies window/tray/shortcut branding. The installer offers application-only Windows executable compression on compatible NTFS storage, without trimming WPF or removing runtime components. All screenshot, annotation, automatic OCR and translation features remain. Windows 10 build 19041 or later is required.

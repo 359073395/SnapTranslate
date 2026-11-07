@@ -1,7 +1,7 @@
 <Window x:Class="SnapTranslate.Views.CaptureOverlayWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
+        xmlns:icons="clr-namespace:SnapTranslate.Controls"
         Title="选择截图区域"
         WindowStyle="None"
         ResizeMode="NoResize"
@@ -196,7 +196,7 @@
                             Click="SelectionToolButton_Click"
                             ToolTip="重新选择截图区域"
                             AutomationProperties.Name="选择区域">
-                        <iconPacks:PackIconMaterial Width="24"
+                        <icons:ToolbarIcon Width="24"
                                                    Height="24"
                                                    Kind="SelectionDrag" />
                     </Button>
@@ -205,7 +205,7 @@
                             Click="RectangleToolButton_Click"
                             ToolTip="画矩形"
                             AutomationProperties.Name="矩形">
-                        <iconPacks:PackIconMaterial Width="24"
+                        <icons:ToolbarIcon Width="24"
                                                    Height="24"
                                                    Kind="RectangleOutline" />
                     </Button>
@@ -214,7 +214,7 @@
                             Click="EllipseToolButton_Click"
                             ToolTip="画圆形或椭圆"
                             AutomationProperties.Name="圆形">
-                        <iconPacks:PackIconMaterial Width="24"
+                        <icons:ToolbarIcon Width="24"
                                                    Height="24"
                                                    Kind="CircleOutline" />
                     </Button>
@@ -223,7 +223,7 @@
                             Click="ArrowToolButton_Click"
                             ToolTip="画箭头"
                             AutomationProperties.Name="箭头">
-                        <iconPacks:PackIconMaterial Width="24"
+                        <icons:ToolbarIcon Width="24"
                                                    Height="24"
                                                    Kind="ArrowTopRight" />
                     </Button>
@@ -232,7 +232,7 @@
                             Click="PenToolButton_Click"
                             ToolTip="自由画笔"
                             AutomationProperties.Name="画笔">
-                        <iconPacks:PackIconMaterial Width="24"
+                        <icons:ToolbarIcon Width="24"
                                                    Height="24"
                                                    Kind="Draw" />
                     </Button>
@@ -241,7 +241,7 @@
                             Click="MosaicToolButton_Click"
                             ToolTip="涂抹马赛克"
                             AutomationProperties.Name="马赛克">
-                        <iconPacks:PackIconMaterial Width="24"
+                        <icons:ToolbarIcon Width="24"
                                                    Height="24"
                                                    Kind="Checkerboard" />
                     </Button>
@@ -250,7 +250,7 @@
                             Click="TextToolButton_Click"
                             ToolTip="添加文字"
                             AutomationProperties.Name="文字">
-                        <iconPacks:PackIconMaterial Width="24"
+                        <icons:ToolbarIcon Width="24"
                                                    Height="24"
                                                    Kind="FormatText" />
                     </Button>
@@ -259,7 +259,7 @@
                             Click="ColorToolButton_Click"
                             ToolTip="标注颜色"
                             AutomationProperties.Name="颜色">
-                        <iconPacks:PackIconMaterial Width="24"
+                        <icons:ToolbarIcon Width="24"
                                                    Height="24"
                                                    Kind="PaletteOutline"
                                                    Foreground="#FF4D4F" />
@@ -269,7 +269,7 @@
                             Click="ThicknessToolButton_Click"
                             ToolTip="线条粗细"
                             AutomationProperties.Name="粗细">
-                        <iconPacks:PackIconMaterial Width="24"
+                        <icons:ToolbarIcon Width="24"
                                                    Height="24"
                                                    Kind="FormatLineWeight" />
                     </Button>
@@ -279,7 +279,7 @@
                             Click="OcrButton_Click"
                             ToolTip="识别图片中的文字"
                             AutomationProperties.Name="识别文字">
-                        <iconPacks:PackIconMaterial Width="24"
+                        <icons:ToolbarIcon Width="24"
                                                    Height="24"
                                                    Kind="TextRecognition" />
                     </Button>
@@ -288,7 +288,7 @@
                             Click="TranslateButton_Click"
                             ToolTip="识别并翻译到图片"
                             AutomationProperties.Name="翻译为目标语言">
-                        <iconPacks:PackIconMaterial Width="24"
+                        <icons:ToolbarIcon Width="24"
                                                    Height="24"
                                                    Kind="Translate" />
                     </Button>
@@ -298,7 +298,7 @@
                             Click="UndoButton_Click"
                             ToolTip="撤销上一条标注"
                             AutomationProperties.Name="撤销">
-                        <iconPacks:PackIconMaterial Width="24"
+                        <icons:ToolbarIcon Width="24"
                                                    Height="24"
                                                    Kind="Undo" />
                     </Button>
@@ -307,7 +307,7 @@
                             Click="SaveImageButton_Click"
                             ToolTip="保存为 PNG"
                             AutomationProperties.Name="保存 PNG">
-                        <iconPacks:PackIconMaterial Width="24"
+                        <icons:ToolbarIcon Width="24"
                                                    Height="24"
                                                    Kind="DownloadOutline" />
                     </Button>
@@ -316,7 +316,7 @@
                             Click="AdvancedEditorButton_Click"
                             ToolTip="在高级编辑器中继续"
                             AutomationProperties.Name="高级编辑">
-                        <iconPacks:PackIconMaterial Width="24"
+                        <icons:ToolbarIcon Width="24"
                                                    Height="24"
                                                    Kind="OpenInNew" />
                     </Button>
@@ -325,7 +325,7 @@
                             Click="CancelButton_Click"
                             ToolTip="取消截图（Esc）"
                             AutomationProperties.Name="取消截图">
-                        <iconPacks:PackIconMaterial Width="26"
+                        <icons:ToolbarIcon Width="26"
                                                    Height="26"
                                                    Foreground="#FF4D5A"
                                                    Kind="Close" />
@@ -335,7 +335,7 @@
                             Click="CompleteButton_Click"
                             ToolTip="完成并复制到剪贴板（Enter / 双击）"
                             AutomationProperties.Name="完成并复制到剪贴板">
-                        <iconPacks:PackIconMaterial Width="28"
+                        <icons:ToolbarIcon Width="28"
                                                    Height="28"
                                                    Foreground="#18C982"
                                                    Kind="Check" />
@@ -522,7 +522,7 @@
                     IsHitTestVisible="False"
                     Visibility="Collapsed">
                 <StackPanel Orientation="Horizontal">
-                    <iconPacks:PackIconMaterial x:Name="StatusIcon"
+                    <icons:ToolbarIcon x:Name="StatusIcon"
                                                Width="17"
                                                Height="17"
                                                Margin="0,0,7,0"

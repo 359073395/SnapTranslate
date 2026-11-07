@@ -1,4 +1,5 @@
 using System.Threading;
+using System.Runtime.InteropServices;
 using System.Windows;
 using MessageBox = System.Windows.MessageBox;
 
@@ -29,6 +30,9 @@ public partial class App : System.Windows.Application
         };
 
         base.OnStartup(e);
+
+        // Match the installer shortcuts so taskbar grouping keeps the LI identity.
+        SetCurrentProcessExplicitAppUserModelID("LingualInsight.LingxiCapture");
 
         _singleInstanceMutex = new Mutex(
             initiallyOwned: true,
@@ -122,4 +126,7 @@ public partial class App : System.Windows.Application
             }
         }, cancellationToken);
     }
+
+    [DllImport("shell32.dll", CharSet = CharSet.Unicode)]
+    private static extern int SetCurrentProcessExplicitAppUserModelID(string appId);
 }
