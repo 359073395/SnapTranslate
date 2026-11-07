@@ -4,7 +4,7 @@
 
 一个面向 Windows 的轻量截图翻译工具：像微信截图一样框选屏幕区域，然后标注、识别文字、翻译、复制或保存。
 
-> 当前版本：`v0.3.0`（可用预览版）
+> 当前版本：`v0.3.1`（可用预览版）
 
 ## 功能
 
@@ -21,16 +21,18 @@
 - 矩形、圆形、箭头、自由画笔、马赛克和文字标注，可调整颜色和粗细
 - 撤销上一条标注
 - 使用 Windows 本地 OCR 识别文字，默认自动选择更合适的已安装识别引擎
+- 自动 OCR 会复用图片解码结果并记住上次成功语言，连续截图识别更快
 - 根据 OCR 文字坐标，把译文直接覆盖在图片对应位置
 - 支持印尼语 / Bahasa Indonesia，适合 TikTok 图片文案
 - 一键复制原文或译文
 - 一键复制带标注图片，或保存为 PNG
 - Google Web 翻译（实验性、无需密钥）
 - OpenAI 兼容翻译接口（支持基础 URL、加密保存 API Key 和连接测试）
+- 批量翻译采用结构化单次请求，并缓存本次运行中相同内容的结果
 
 ## 下载和使用
 
-推荐从 GitHub 的 [Releases](../../releases) 下载 `LingxiCapture-Setup-v0.3.0-win-x64.exe`，安装时可以选择路径。也可以下载便携版 `LingxiCapture-v0.3.0-win-x64.zip`，解压后运行 `LingxiCapture.exe`。两个发布包都自带 .NET 运行时。
+推荐从 GitHub 的 [Releases](../../releases) 下载 `LingxiCapture-Setup-v0.3.1-win-x64.exe`，安装时可以选择路径。也可以下载便携版 `LingxiCapture-v0.3.1-win-x64.zip`，解压后运行 `LingxiCapture.exe`。两个发布包都自带 .NET 运行时。
 
 系统要求：
 
@@ -119,4 +121,4 @@ dotnet publish src\SnapTranslate\SnapTranslate.csproj `
 
 Lingxi Capture (Lingual Insight) is a lightweight Windows screenshot translator. Press `Ctrl + Shift + A`, select a region, annotate it, run local Windows OCR, translate text, and copy or save the result.
 
-The `v0.3.0` preview introduces the Lingxi Capture brand and LI icon, true system-tray behavior, default Windows startup, settings migration, and an installer with a selectable destination folder. It retains the WeChat-style annotation toolbar, automatic Windows OCR selection, Indonesian/Bahasa Indonesia, position-aware translation overlays, and OpenAI-compatible relay settings with Windows-encrypted API key storage. Windows 10 build 19041 or later is required.
+The `v0.3.1` preview speeds up translation with structured single-request batches, in-session result caching, lower-output OpenAI-compatible requests, one-time image decoding for automatic OCR, and fast reuse of the last successful OCR language. It retains the Lingxi Capture brand, WeChat-style annotation toolbar, Indonesian/Bahasa Indonesia, position-aware translation overlays, system-tray behavior, default Windows startup, and a selectable-path installer. Windows 10 build 19041 or later is required.

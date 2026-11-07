@@ -1,6 +1,6 @@
 #define AppName "灵犀截图"
 #define AppEnglishName "Lingxi Capture"
-#define AppVersion "0.3.0"
+#define AppVersion "0.3.1"
 #define AppPublisher "Lingxi Capture contributors"
 #define AppExeName "LingxiCapture.exe"
 
@@ -20,7 +20,7 @@ DisableDirPage=no
 PrivilegesRequired=lowest
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
-OutputDir=..\artifacts\installer-v0.3.0
+OutputDir=..\artifacts\installer-v0.3.1
 OutputBaseFilename=LingxiCapture-Setup-v{#AppVersion}-win-x64
 SetupIconFile=..\src\SnapTranslate\Assets\lingxi-icon.ico
 UninstallDisplayIcon={app}\{#AppExeName}
@@ -46,7 +46,7 @@ Name: "chinesesimplified"; MessagesFile: "ChineseSimplified.isl"
 Name: "desktopicon"; Description: "创建桌面快捷方式"; GroupDescription: "附加快捷方式："; Flags: unchecked
 
 [Files]
-Source: "..\artifacts\publish-v0.3.0\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "..\artifacts\publish-v0.3.1\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
 Name: "{autoprograms}\{#AppName}"; Filename: "{app}\{#AppExeName}"; WorkingDir: "{app}"

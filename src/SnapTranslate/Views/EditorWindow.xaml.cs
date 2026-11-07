@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.IO;
 using System.Drawing;
 using System.Windows;
@@ -284,7 +285,9 @@ public partial class EditorWindow : Window
 
         try
         {
+            Stopwatch totalTimer = Stopwatch.StartNew();
             OcrRecognitionResult recognition = await RecognizeAsync(force: false);
+            TimeSpan ocrElapsed = totalTimer.Elapsed;
             if (recognition.Lines.Count == 0)
             {
                 throw new InvalidOperationException("截图中没有识别到文字。");
@@ -296,6 +299,7 @@ public partial class EditorWindow : Window
                 await _translationService.TranslateLinesAsync(
                     recognition.Lines.Select(line => line.Text).ToArray(),
                     _workCancellation.Token);
+            TimeSpan translationElapsed = totalTimer.Elapsed - ocrElapsed;
             TranslatedTextBox.Text = string.Join(
                 Environment.NewLine,
                 translatedLines);
@@ -304,7 +308,7 @@ public partial class EditorWindow : Window
                 translatedLines);
             ShowResults();
             StatusText.Text =
-                $"已翻译为{targetLanguage}，译文已覆盖在图片对应位置。";
+                $"已翻译为{targetLanguage}，译文已覆盖在图片对应位置（OCR {ocrElapsed.TotalSeconds:0.0}s，翻译 {translationElapsed.TotalSeconds:0.0}s）。";
         }
         catch (Exception ex)
         {

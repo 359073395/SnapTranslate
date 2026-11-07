@@ -22,6 +22,7 @@ public static class OcrService
 {
     public const string AutoLanguageTag = "auto";
     private const int MaximumAutoCandidates = 8;
+    private static string? _lastAutoLanguageTag;
 
     public static IReadOnlyList<LanguageOption> GetAvailableLanguages()
     {
@@ -77,10 +78,13 @@ public static class OcrService
                 encodedBytes = encoded.ToArray();
             }
 
+            using SoftwareBitmap softwareBitmap =
+                await DecodeSoftwareBitmapAsync(encodedBytes);
+
             if (string.Equals(languageTag, AutoLanguageTag, StringComparison.OrdinalIgnoreCase))
             {
                 return await RecognizeAutomaticallyAsync(
-                    encodedBytes,
+                    softwareBitmap,
                     copy.Width,
                     copy.Height,
                     cancellationToken);
@@ -94,7 +98,7 @@ public static class OcrService
             }
 
             return await RecognizeWithLanguageAsync(
-                encodedBytes,
+                softwareBitmap,
                 language,
                 cancellationToken);
         }, cancellationToken);
@@ -132,7 +136,7 @@ public static class OcrService
     }
 
     private static async Task<OcrRecognitionResult> RecognizeAutomaticallyAsync(
-        byte[] encodedBytes,
+        SoftwareBitmap softwareBitmap,
         int imageWidth,
         int imageHeight,
         CancellationToken cancellationToken)
@@ -148,11 +152,12 @@ public static class OcrService
         OcrRecognitionResult? bestResult = null;
         double bestScore = double.NegativeInfinity;
 
-        foreach (Language candidate in candidates)
+        for (int index = 0; index < candidates.Count; index++)
         {
             cancellationToken.ThrowIfCancellationRequested();
+            Language candidate = candidates[index];
             OcrRecognitionResult result = await RecognizeWithLanguageAsync(
-                encodedBytes,
+                softwareBitmap,
                 candidate,
                 cancellationToken);
             double score = ScoreRecognition(
@@ -165,9 +170,24 @@ public static class OcrService
                 bestResult = result;
                 bestScore = score;
             }
+
+            if (index == 0 &&
+                string.Equals(
+                    candidate.LanguageTag,
+                    _lastAutoLanguageTag,
+                    StringComparison.OrdinalIgnoreCase) &&
+                IsConfidentRecognition(result, candidate.LanguageTag))
+            {
+                return result;
+            }
         }
 
         cancellationToken.ThrowIfCancellationRequested();
+        if (bestResult is not null)
+        {
+            _lastAutoLanguageTag = bestResult.RecognizerLanguageTag;
+        }
+
         return bestResult ?? OcrRecognitionResult.Empty;
     }
 
@@ -175,6 +195,19 @@ public static class OcrService
         IReadOnlyList<Language> availableLanguages)
     {
         List<Language> candidates = [];
+
+        if (!string.IsNullOrWhiteSpace(_lastAutoLanguageTag))
+        {
+            Language? previousLanguage = availableLanguages.FirstOrDefault(
+                language => string.Equals(
+                    language.LanguageTag,
+                    _lastAutoLanguageTag,
+                    StringComparison.OrdinalIgnoreCase));
+            if (previousLanguage is not null)
+            {
+                AddCandidate(candidates, previousLanguage);
+            }
+        }
 
         OcrEngine? profileEngine = OcrEngine.TryCreateFromUserProfileLanguages();
         if (profileEngine is not null)
@@ -232,7 +265,7 @@ public static class OcrService
     }
 
     private static async Task<OcrRecognitionResult> RecognizeWithLanguageAsync(
-        byte[] encodedBytes,
+        SoftwareBitmap softwareBitmap,
         Language language,
         CancellationToken cancellationToken)
     {
@@ -240,19 +273,6 @@ public static class OcrService
                            ?? throw new InvalidOperationException(
                                $"无法启动 {language.DisplayName} Windows OCR 引擎。");
 
-        using InMemoryRandomAccessStream stream = new();
-        using (IOutputStream output = stream.GetOutputStreamAt(0))
-        using (DataWriter writer = new(output))
-        {
-            writer.WriteBytes(encodedBytes);
-            await writer.StoreAsync();
-            await writer.FlushAsync();
-            writer.DetachStream();
-        }
-
-        stream.Seek(0);
-        BitmapDecoder decoder = await BitmapDecoder.CreateAsync(stream);
-        using SoftwareBitmap softwareBitmap = await decoder.GetSoftwareBitmapAsync();
         OcrResult result = await engine.RecognizeAsync(softwareBitmap);
 
         List<OcrTextLine> recognizedLines = [];
@@ -299,6 +319,103 @@ public static class OcrService
         return new OcrRecognitionResult(
             recognizedLines,
             engine.RecognizerLanguage.LanguageTag);
+    }
+
+    private static async Task<SoftwareBitmap> DecodeSoftwareBitmapAsync(
+        byte[] encodedBytes)
+    {
+        using InMemoryRandomAccessStream stream = new();
+        using (IOutputStream output = stream.GetOutputStreamAt(0))
+        using (DataWriter writer = new(output))
+        {
+            writer.WriteBytes(encodedBytes);
+            await writer.StoreAsync();
+            await writer.FlushAsync();
+            writer.DetachStream();
+        }
+
+        stream.Seek(0);
+        BitmapDecoder decoder = await BitmapDecoder.CreateAsync(stream);
+        return await decoder.GetSoftwareBitmapAsync();
+    }
+
+    private static bool IsConfidentRecognition(
+        OcrRecognitionResult result,
+        string languageTag)
+    {
+        if (result.Lines.Count == 0)
+        {
+            return false;
+        }
+
+        int latin = 0;
+        int cjk = 0;
+        int kana = 0;
+        int hangul = 0;
+        int cyrillic = 0;
+        int arabic = 0;
+        foreach (Rune rune in result.Text.EnumerateRunes())
+        {
+            int value = rune.Value;
+            if (IsCjk(value))
+            {
+                cjk++;
+            }
+            else if (IsKana(value))
+            {
+                kana++;
+            }
+            else if (IsHangul(value))
+            {
+                hangul++;
+            }
+            else if (IsCyrillic(value))
+            {
+                cyrillic++;
+            }
+            else if (IsArabic(value))
+            {
+                arabic++;
+            }
+            else if (IsLatin(value))
+            {
+                latin++;
+            }
+        }
+
+        int letters = latin + cjk + kana + hangul + cyrillic + arabic;
+        if (letters < 3)
+        {
+            return false;
+        }
+
+        if (languageTag.StartsWith("zh", StringComparison.OrdinalIgnoreCase))
+        {
+            return cjk >= 2 && cjk >= letters * 0.55;
+        }
+
+        if (languageTag.StartsWith("ja", StringComparison.OrdinalIgnoreCase))
+        {
+            return kana >= 1 && kana + cjk >= letters * 0.55;
+        }
+
+        if (languageTag.StartsWith("ko", StringComparison.OrdinalIgnoreCase))
+        {
+            return hangul >= 2 && hangul >= letters * 0.55;
+        }
+
+        if (languageTag.StartsWith("ar", StringComparison.OrdinalIgnoreCase))
+        {
+            return arabic >= 2 && arabic >= letters * 0.65;
+        }
+
+        if (languageTag.StartsWith("ru", StringComparison.OrdinalIgnoreCase) ||
+            languageTag.StartsWith("uk", StringComparison.OrdinalIgnoreCase))
+        {
+            return cyrillic >= 3 && cyrillic >= letters * 0.65;
+        }
+
+        return latin >= 4 && latin >= letters * 0.8;
     }
 
     private static double ScoreRecognition(

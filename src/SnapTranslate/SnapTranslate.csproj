@@ -12,7 +12,7 @@
     <ApplicationIcon>Assets\lingxi-icon.ico</ApplicationIcon>
     <AssemblyName>LingxiCapture</AssemblyName>
     <RootNamespace>SnapTranslate</RootNamespace>
-    <Version>0.3.0</Version>
+    <Version>0.3.1</Version>
     <AssemblyTitle>灵犀截图</AssemblyTitle>
     <Product>灵犀截图</Product>
     <Authors>Lingxi Capture contributors</Authors>

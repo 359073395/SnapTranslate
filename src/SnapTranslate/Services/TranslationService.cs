@@ -1,5 +1,8 @@
+using System.Collections.Concurrent;
+using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using SnapTranslate.Models;
@@ -8,10 +11,14 @@ namespace SnapTranslate.Services;
 
 public sealed class TranslationService
 {
+    private const int MaximumCachedTranslations = 128;
     private static readonly HttpClient Http = new()
     {
         Timeout = TimeSpan.FromSeconds(45)
     };
+    private static readonly ConcurrentDictionary<string, string> TranslationCache = new();
+    private static readonly ConcurrentDictionary<string, string[]> LineTranslationCache = new();
+    private static readonly ConcurrentQueue<string> CacheOrder = new();
 
     private readonly AppSettings _settings;
 
@@ -20,16 +27,29 @@ public sealed class TranslationService
         _settings = settings;
     }
 
-    public Task<string> TranslateAsync(string text, CancellationToken cancellationToken = default)
+    public async Task<string> TranslateAsync(
+        string text,
+        CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(text))
         {
             throw new InvalidOperationException("没有可翻译的文字。");
         }
 
-        return string.Equals(_settings.TranslationProvider, "OpenAI", StringComparison.OrdinalIgnoreCase)
-            ? TranslateWithOpenAiAsync(text, cancellationToken)
-            : TranslateWithGoogleWebAsync(text, cancellationToken);
+        string cacheKey = CreateCacheKey("text", text);
+        if (TranslationCache.TryGetValue(cacheKey, out string? cached))
+        {
+            return cached;
+        }
+
+        string result = string.Equals(
+                _settings.TranslationProvider,
+                "OpenAI",
+                StringComparison.OrdinalIgnoreCase)
+            ? await TranslateWithOpenAiAsync(text, cancellationToken)
+            : await TranslateWithGoogleWebAsync(text, cancellationToken);
+        CacheTranslation(cacheKey, result);
+        return result;
     }
 
     public async Task<IReadOnlyList<string>> TranslateLinesAsync(
@@ -41,22 +61,68 @@ public sealed class TranslationService
             return [];
         }
 
+        string lineCacheKey = CreateCacheKey(
+            "lines",
+            JsonSerializer.Serialize(lines));
+        if (LineTranslationCache.TryGetValue(
+                lineCacheKey,
+                out string[]? cachedLines))
+        {
+            return cachedLines;
+        }
+
+        if (string.Equals(
+                _settings.TranslationProvider,
+                "OpenAI",
+                StringComparison.OrdinalIgnoreCase))
+        {
+            string content = await SendOpenAiChatAsync(
+                JsonSerializer.Serialize(new { lines }),
+                GetOpenAiLineTranslationInstruction(),
+                cancellationToken);
+            if (TryParseTranslationArray(content, lines.Count, out string[] translations))
+            {
+                CacheLineTranslation(lineCacheKey, translations);
+                return translations;
+            }
+
+            string[] returnedLines = SplitTranslatedLines(content);
+            if (HasMatchingLines(returnedLines, lines.Count))
+            {
+                CacheLineTranslation(lineCacheKey, returnedLines);
+                return returnedLines;
+            }
+
+            string[] fallback = await TranslateLinesIndividuallyAsync(
+                lines,
+                cancellationToken);
+            CacheLineTranslation(lineCacheKey, fallback);
+            return fallback;
+        }
+
         string combined = string.Join('\n', lines);
         string combinedTranslation = await TranslateAsync(combined, cancellationToken);
-        string[] translatedLines = combinedTranslation
-            .Replace("\r", string.Empty, StringComparison.Ordinal)
-            .Split('\n')
-            .Select(line => line.Trim())
-            .ToArray();
+        string[] translatedLines = SplitTranslatedLines(combinedTranslation);
 
-        if (translatedLines.Length == lines.Count &&
-            translatedLines.All(line => line.Length > 0))
+        if (HasMatchingLines(translatedLines, lines.Count))
         {
+            CacheLineTranslation(lineCacheKey, translatedLines);
             return translatedLines;
         }
 
+        string[] fallbackTranslations = await TranslateLinesIndividuallyAsync(
+            lines,
+            cancellationToken);
+        CacheLineTranslation(lineCacheKey, fallbackTranslations);
+        return fallbackTranslations;
+    }
+
+    private async Task<string[]> TranslateLinesIndividuallyAsync(
+        IReadOnlyList<string> lines,
+        CancellationToken cancellationToken)
+    {
         string[] fallbackTranslations = new string[lines.Count];
-        using SemaphoreSlim concurrency = new(3);
+        using SemaphoreSlim concurrency = new(4);
         IEnumerable<Task> translationTasks = lines.Select(
             async (line, index) =>
             {
@@ -118,6 +184,15 @@ public sealed class TranslationService
 
     private async Task<string> TranslateWithOpenAiAsync(
         string text,
+        CancellationToken cancellationToken) =>
+        await SendOpenAiChatAsync(
+            text,
+            GetOpenAiTranslationInstruction(),
+            cancellationToken);
+
+    private async Task<string> SendOpenAiChatAsync(
+        string userContent,
+        string systemInstruction,
         CancellationToken cancellationToken)
     {
         string? apiKey = _settings.OpenAiApiKey;
@@ -146,12 +221,12 @@ public sealed class TranslationService
                 new
                 {
                     role = "system",
-                    content = GetOpenAiTranslationInstruction()
+                    content = systemInstruction
                 },
                 new
                 {
                     role = "user",
-                    content = text
+                    content = userContent
                 }
             }
         };
@@ -159,6 +234,11 @@ public sealed class TranslationService
         if (model.StartsWith("gpt-5", StringComparison.OrdinalIgnoreCase))
         {
             payloadValues["reasoning_effort"] = "none";
+            payloadValues["verbosity"] = "low";
+            payloadValues["max_completion_tokens"] = Math.Clamp(
+                userContent.Length * 3,
+                128,
+                2048);
         }
         else
         {
@@ -169,9 +249,15 @@ public sealed class TranslationService
 
         using HttpRequestMessage request = new(HttpMethod.Post, endpoint);
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
+        request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+        request.Version = HttpVersion.Version20;
+        request.VersionPolicy = HttpVersionPolicy.RequestVersionOrLower;
         request.Content = new StringContent(payload, Encoding.UTF8, "application/json");
 
-        using HttpResponseMessage response = await Http.SendAsync(request, cancellationToken);
+        using HttpResponseMessage response = await Http.SendAsync(
+            request,
+            HttpCompletionOption.ResponseHeadersRead,
+            cancellationToken);
         string json = await response.Content.ReadAsStringAsync(cancellationToken);
         if (!response.IsSuccessStatusCode)
         {
@@ -194,6 +280,120 @@ public sealed class TranslationService
         }
 
         throw new InvalidOperationException("OpenAI 兼容接口返回格式无法识别。");
+    }
+
+    private static string[] SplitTranslatedLines(string value) =>
+        value
+            .Replace("\r", string.Empty, StringComparison.Ordinal)
+            .Split('\n')
+            .Select(line => line.Trim())
+            .ToArray();
+
+    private static bool HasMatchingLines(
+        IReadOnlyList<string> lines,
+        int expectedCount) =>
+        lines.Count == expectedCount && lines.All(line => line.Length > 0);
+
+    private static bool TryParseTranslationArray(
+        string content,
+        int expectedCount,
+        out string[] translations)
+    {
+        translations = [];
+        string json = StripMarkdownCodeFence(content);
+        try
+        {
+            using JsonDocument document = JsonDocument.Parse(json);
+            JsonElement root = document.RootElement;
+            JsonElement values;
+            if (root.ValueKind == JsonValueKind.Object &&
+                root.TryGetProperty("translations", out JsonElement nested))
+            {
+                values = nested;
+            }
+            else
+            {
+                values = root;
+            }
+
+            if (values.ValueKind != JsonValueKind.Array)
+            {
+                return false;
+            }
+
+            string[] parsed = values
+                .EnumerateArray()
+                .Select(item => item.ValueKind == JsonValueKind.String
+                    ? item.GetString()?.Trim() ?? string.Empty
+                    : string.Empty)
+                .ToArray();
+            if (!HasMatchingLines(parsed, expectedCount))
+            {
+                return false;
+            }
+
+            translations = parsed;
+            return true;
+        }
+        catch (JsonException)
+        {
+            return false;
+        }
+    }
+
+    private static string StripMarkdownCodeFence(string value)
+    {
+        string result = value.Trim();
+        if (!result.StartsWith("```", StringComparison.Ordinal))
+        {
+            return result;
+        }
+
+        int firstLineEnd = result.IndexOf('\n');
+        if (firstLineEnd < 0)
+        {
+            return result;
+        }
+
+        result = result[(firstLineEnd + 1)..];
+        int closingFence = result.LastIndexOf("```", StringComparison.Ordinal);
+        return (closingFence >= 0 ? result[..closingFence] : result).Trim();
+    }
+
+    private string CreateCacheKey(string kind, string content)
+    {
+        string identity = string.Join(
+            '\u001F',
+            kind,
+            _settings.TranslationProvider,
+            _settings.TargetLanguage,
+            _settings.OpenAiEndpoint,
+            _settings.OpenAiModel,
+            content);
+        return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(identity)));
+    }
+
+    private static void CacheTranslation(string key, string value)
+    {
+        TranslationCache[key] = value;
+        TrimCache(key);
+    }
+
+    private static void CacheLineTranslation(string key, string[] value)
+    {
+        LineTranslationCache[key] = value;
+        TrimCache(key);
+    }
+
+    private static void TrimCache(string key)
+    {
+        CacheOrder.Enqueue(key);
+        while (CacheOrder.Count > MaximumCachedTranslations &&
+               CacheOrder.TryDequeue(out string? oldest))
+        {
+            TranslationCache.TryRemove(oldest, out _);
+            LineTranslationCache.TryRemove(oldest, out _);
+        }
     }
 
     public static Uri ResolveOpenAiEndpoint(string value)
@@ -303,5 +503,23 @@ public sealed class TranslationService
         return
             $"Translate the user text into {_settings.TargetLanguage}. " +
             "Keep it concise for an image overlay, preserve line breaks, and return only the translation.";
+    }
+
+    private string GetOpenAiLineTranslationInstruction()
+    {
+        string languageInstruction = string.Equals(
+                _settings.TargetLanguage,
+                "id",
+                StringComparison.OrdinalIgnoreCase)
+            ? "Translate every item into natural, concise Indonesian (Bahasa Indonesia) suitable for TikTok."
+            : $"Translate every item into {_settings.TargetLanguage}.";
+
+        return
+            $"{languageInstruction} " +
+            "The user sends a JSON object with a lines array. " +
+            "Return valid compact JSON only in the form {\"translations\":[\"...\"]}. " +
+            "The translations array must contain exactly one non-empty string for each input item in the same order. " +
+            "Preserve emojis, @handles, hashtags, names, numbers, and product terms. " +
+            "Do not add explanations or Markdown.";
     }
 }
