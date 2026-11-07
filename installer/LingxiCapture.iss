@@ -1,6 +1,6 @@
 #define AppName "灵犀截图"
 #define AppEnglishName "Lingxi Capture"
-#define AppVersion "0.3.1"
+#define AppVersion "0.3.2"
 #define AppPublisher "Lingxi Capture contributors"
 #define AppExeName "LingxiCapture.exe"
 
@@ -20,7 +20,7 @@ DisableDirPage=no
 PrivilegesRequired=lowest
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
-OutputDir=..\artifacts\installer-v0.3.1
+OutputDir=..\artifacts\installer-v0.3.2
 OutputBaseFilename=LingxiCapture-Setup-v{#AppVersion}-win-x64
 SetupIconFile=..\src\SnapTranslate\Assets\lingxi-icon.ico
 UninstallDisplayIcon={app}\{#AppExeName}
@@ -44,16 +44,35 @@ Name: "chinesesimplified"; MessagesFile: "ChineseSimplified.isl"
 
 [Tasks]
 Name: "desktopicon"; Description: "创建桌面快捷方式"; GroupDescription: "附加快捷方式："; Flags: unchecked
+Name: "compactfiles"; Description: "节省磁盘空间（NTFS 透明压缩，不删减运行组件）"; GroupDescription: "磁盘优化："
 
 [Files]
-Source: "..\artifacts\publish-v0.3.1\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "..\artifacts\publish-v0.3.2\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
-Name: "{autoprograms}\{#AppName}"; Filename: "{app}\{#AppExeName}"; WorkingDir: "{app}"
-Name: "{autodesktop}\{#AppName}"; Filename: "{app}\{#AppExeName}"; WorkingDir: "{app}"; Tasks: desktopicon
+Name: "{autoprograms}\{#AppName}"; Filename: "{app}\{#AppExeName}"; WorkingDir: "{app}"; IconFilename: "{app}\{#AppExeName}"; AppUserModelID: "LingualInsight.LingxiCapture"
+Name: "{autodesktop}\{#AppName}"; Filename: "{app}\{#AppExeName}"; WorkingDir: "{app}"; IconFilename: "{app}\{#AppExeName}"; AppUserModelID: "LingualInsight.LingxiCapture"; Tasks: desktopicon
 
 [Registry]
 Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: string; ValueName: "LingxiCapture"; ValueData: """{app}\{#AppExeName}"" --background"; Flags: uninsdeletevalue
 
 [Run]
 Filename: "{app}\{#AppExeName}"; Description: "启动{#AppName}"; WorkingDir: "{app}"; Flags: nowait postinstall skipifsilent
+
+[Code]
+procedure CurStepChanged(CurStep: TSetupStep);
+var
+  ResultCode: Integer;
+begin
+  if (CurStep = ssPostInstall) and WizardIsTaskSelected('compactfiles') then
+  begin
+    { Compress only this application's binaries, not settings or system files.
+      FAT/exFAT or unsupported storage may decline; installation still succeeds. }
+    if Exec(ExpandConstant('{sys}\compact.exe'),
+      ExpandConstant('/C /EXE:LZX /I /Q "{app}\{#AppExeName}" "{app}\*.dll"'),
+      ExpandConstant('{app}'), SW_HIDE, ewWaitUntilTerminated, ResultCode) then
+      Log(Format('Optional application-only compact exit code: %d', [ResultCode]))
+    else
+      Log('Optional disk compression unavailable; keeping standard binaries.');
+  end;
+end;

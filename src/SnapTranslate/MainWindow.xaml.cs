@@ -39,6 +39,8 @@ public partial class MainWindow : Window
     {
         _startHidden = startHidden;
         InitializeComponent();
+        Version version = typeof(MainWindow).Assembly.GetName().Version!;
+        Title = $"灵犀截图 v{version.Major}.{version.Minor}.{version.Build}";
         _notifyIcon = CreateTrayIcon();
 
         if (startHidden)
@@ -111,15 +113,10 @@ public partial class MainWindow : Window
             Visible = true,
             ContextMenuStrip = menu
         };
-        string executablePath = Environment.ProcessPath
-            ?? Path.Combine(AppContext.BaseDirectory, "LingxiCapture.exe");
-        DrawingIcon? applicationIcon =
-            DrawingIcon.ExtractAssociatedIcon(executablePath);
-        if (applicationIcon is not null)
-        {
-            notifyIcon.Icon = (DrawingIcon)applicationIcon.Clone();
-            applicationIcon.Dispose();
-        }
+        using Stream iconStream = System.Windows.Application.GetResourceStream(
+            new Uri("pack://application:,,,/LingxiCapture;component/Assets/lingxi-icon.ico"))!.Stream;
+        using DrawingIcon applicationIcon = new(iconStream);
+        notifyIcon.Icon = (DrawingIcon)applicationIcon.Clone();
 
         notifyIcon.DoubleClick += (_, _) => Dispatcher.InvokeAsync(ShowFromTray);
         return notifyIcon;
@@ -561,6 +558,7 @@ public partial class MainWindow : Window
     {
         _notifyIcon.Visible = false;
         _notifyIcon.ContextMenuStrip?.Dispose();
+        _notifyIcon.Icon?.Dispose();
         _notifyIcon.Dispose();
         _hotkeyService.Dispose();
     }
