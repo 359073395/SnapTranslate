@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Runtime.InteropServices;
@@ -681,7 +682,9 @@ public partial class CaptureOverlayWindow : Window
 
         try
         {
+            Stopwatch totalTimer = Stopwatch.StartNew();
             OcrRecognitionResult recognition = await RecognizeAsync(force: false);
+            TimeSpan ocrElapsed = totalTimer.Elapsed;
             if (recognition.Lines.Count == 0)
             {
                 throw new InvalidOperationException("截图中没有识别到文字。");
@@ -693,11 +696,14 @@ public partial class CaptureOverlayWindow : Window
                 await _translationService.TranslateLinesAsync(
                     recognition.Lines.Select(line => line.Text).ToArray(),
                     _workCancellation.Token);
+            TimeSpan translationElapsed = totalTimer.Elapsed - ocrElapsed;
             TranslatedTextBlock.Text = string.Join(Environment.NewLine, translatedLines);
             ApplyTranslationOverlays(recognition.Lines, translatedLines);
             ResultsPopover.Visibility = Visibility.Visible;
             PositionFloatingUi();
-            ShowStatus($"已翻译为{targetLanguage}", PackIconMaterialKind.Translate);
+            ShowStatus(
+                $"已翻译为{targetLanguage}（OCR {ocrElapsed.TotalSeconds:0.0}s，翻译 {translationElapsed.TotalSeconds:0.0}s）",
+                PackIconMaterialKind.Translate);
         }
         catch (Exception exception)
         {
